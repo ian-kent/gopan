@@ -736,7 +736,7 @@ func main() {
 				}
 			case <-tc:
 				tt.Stop()
-				return
+				break
 			}
 		}
 	}()

@@ -71,4 +71,5 @@ These are added to perl_core.go, and are ignored when installing modules.
   - author path (A/AB/ABC/Some-Module-1.01.tar.gz)
   - full URL (http://path.to/Some-Module-1.01.tar.gz)
 - BackPAN version lookup support
-  - Index BackPAN versions so "Some::Module-1.01" is found for "Some::Module >= 1.00"
+  - multiple BackPAN indexes/URLs
+  - index BackPAN versions so "Some::Module-1.01" is found for "Some::Module >= 1.00"
