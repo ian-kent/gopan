@@ -1,23 +1,24 @@
 package main
 
-import(
-	"flag"
-	"io/ioutil"
-	"strings"
-	"regexp"
-	"net/http"
-	"strconv"
-	"os"
-	"io"
-	"compress/gzip"
-	"os/exec"
+import (
 	"bytes"
-	"runtime"
-	"sync"
-	"gopkg.in/yaml.v1"
+	"compress/gzip"
+	"flag"
 	"fmt"
-	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/go-log/layout"
+	"github.com/ian-kent/go-log/log"
+	"gopkg.in/yaml.v1"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/exec"
+	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 // TODO add -backpan so additional backpan indexes can be specified
@@ -32,29 +33,30 @@ var backpan = "http://backpan.cpan.org"
 var cpanfile string
 
 var module_download_locks = make(map[string]sync.Mutex, 0)
-var module_install_locks = make(map[string]sync.Mutex, 0)
+var module_install_chans = make(map[string]chan int, 0)
+var module_install_lookup = make(map[string]string, 0)
 
 var reqcount int
 var depcount int
-var lockpending int 
+var lockpending int
 
 var max int
 
 type Dependency struct {
-	name string
-	version string
+	name     string
+	version  string
 	modifier string
-	module *Module
+	module   *Module
 }
 
 type Module struct {
-	name string
+	name    string
 	version string
-	url string
-	cached string
-	dir string
-	deps []*Dependency
-	formod *Module
+	url     string
+	cached  string
+	dir     string
+	deps    []*Dependency
+	formod  *Module
 }
 
 func (v *Dependency) Matches(module *Module) bool {
@@ -74,22 +76,37 @@ func (v *Dependency) Matches(module *Module) bool {
 	valid := false
 	switch v.modifier {
 	case "==":
-		//log.Printf("Matches: %f == %f", dv, mv)
-		if mv == dv { valid = true }
+		log.Trace("Matches: %f == %f", mv, dv)
+		if mv == dv {
+			valid = true
+		}
 	case "<=":
-		if mv <= dv { valid = true }
+		log.Trace("Matches: %f <= %f", mv, dv)
+		if mv <= dv {
+			valid = true
+		}
 	case ">=":
-		if mv >= dv { valid = true }
+		log.Trace("Matches: %f >= %f", mv, dv)
+		if mv >= dv {
+			valid = true
+		}
 	case ">":
-		if mv > dv { valid = true }
+		log.Trace("Matches: %f > %f", mv, dv)
+		if mv > dv {
+			valid = true
+		}
 	case "<":
-		if mv < dv { valid = true }
+		log.Trace("Matches: %f < %f", mv, dv)
+		if mv < dv {
+			valid = true
+		}
 	}
+	log.Trace("=> Result: %t", valid)
 	return valid
 }
 
-var cpanindex map[string]*Module;
-var backpanindex map[string]*Module;
+var cpanindex map[string]*Module
+var backpanindex map[string]*Module
 
 func DependencyFromString(name string, dependency string) *Dependency {
 	re := regexp.MustCompile("^([=><!]+)?\\s*(.*)$")
@@ -103,8 +120,8 @@ func DependencyFromString(name string, dependency string) *Dependency {
 		}
 
 		return &Dependency{
-			name: name,
-			version: matches[2],
+			name:     name,
+			version:  matches[2],
 			modifier: matches[1],
 		}
 	} else {
@@ -117,7 +134,7 @@ var cpanRe = regexp.MustCompile("^\\s*([^\\s]+)\\s*([^\\s]+)\\s*(.*)$")
 var backpanRe = regexp.MustCompile("^authors/id/\\w/\\w{2}/\\w+/([^\\s]+)[-_]v?([\\d\\._\\w]+)(?:-\\w+)?.tar.gz$")
 
 func ModuleFromCPANIndex(mirror string, module string) *Module {
-	//log.Printf("Module: module%s\n", module)	
+	//log.Printf("Module: module%s\n", module)
 	matches := cpanRe.FindStringSubmatch(module)
 	url := "authors/id/" + matches[3]
 	version := matches[2]
@@ -136,11 +153,11 @@ func ModuleFromCPANIndex(mirror string, module string) *Module {
 	} else {
 		version = vb[0]
 	}
-	
+
 	return &Module{
-		name: matches[1],
+		name:    matches[1],
 		version: version,
-		url: mirror + "/" + url,
+		url:     mirror + "/" + url,
 	}
 }
 func ModuleFromBackPANIndex(module string) *Module {
@@ -149,7 +166,7 @@ func ModuleFromBackPANIndex(module string) *Module {
 
 	if !strings.HasSuffix(path, ".tar.gz") {
 		//log.Printf("Skipping: %s\n", path)
-		return nil;
+		return nil
 	}
 
 	//log.Printf("Found: %s\n", path)
@@ -165,9 +182,9 @@ func ModuleFromBackPANIndex(module string) *Module {
 	//log.Printf("BACKPAN: %s (%s) -> %s", name, version, path)
 
 	return &Module{
-		name: name,
+		name:    name,
 		version: version,
-		url: backpan + "/" + path,
+		url:     backpan + "/" + path,
 	}
 }
 
@@ -196,7 +213,7 @@ func getBackPANIndex() {
 		//log.Printf("Parsing: %s\n", p)
 		m := ModuleFromBackPANIndex(p)
 		if m != nil {
-			backpanindex[m.name + "-" + m.version] = m
+			backpanindex[m.name+"-"+m.version] = m
 		}
 	}
 
@@ -230,8 +247,8 @@ func getCPANIndex(mirror string) {
 	foundnl := false
 	for _, p := range strings.Split(string(packages), "\n") {
 		if !foundnl && len(p) == 0 {
-			foundnl = true;
-			continue;
+			foundnl = true
+			continue
 		}
 		if !foundnl || len(p) == 0 {
 			continue
@@ -242,7 +259,7 @@ func getCPANIndex(mirror string) {
 	}
 	ecount := len(cpanindex)
 
-	log.Printf("Found %d additional packages (%d total)", ecount - scount, len(cpanindex))
+	log.Printf("Found %d additional packages (%d total)", ecount-scount, len(cpanindex))
 }
 
 func installModule(m *Module, depth int) []string {
@@ -255,29 +272,36 @@ func installModule(m *Module, depth int) []string {
 	}
 
 	//log.Printf(prefix + "Attempting to install module: %s-%s", m.name, m.version)
-
-	if mt, ok := module_install_locks[m.url]; ok {
+	mname := m.name
+	if mcached, ok := module_install_lookup[m.cached]; ok {
+		log.Trace("Install module " + m.name + " resolves to install channel " + mcached)
+		mname = mcached
+	} else {
+		module_install_lookup[m.cached] = m.name
+	}
+	if ch, ok := module_install_chans[mname]; ok {
 		fm := flattenForMod(m)
-		if strings.Contains(fm, m.name + "-" + m.version + "->") {
-			log.Printf(prefix + "Detected circular dependency: %s", fm)
+		if strings.Contains(fm, m.name+"-"+m.version+"->") {
+			log.Printf(prefix+"Detected circular dependency: %s", fm)
 			return errors
 		}
 
-		// log.Printf(prefix + "Waiting on install lock for " + fm)
-		lockpending++
-		mt.Lock()
-		mt.Unlock()
-		lockpending--
-		log.Printf(prefix + m.name + "-" + m.version + " is already installed")
+		log.Trace(prefix+"(%d) Waiting on install channel for %s", depth, m.name)
+		log.Trace("^ %s", fm)
+		<-ch
+		log.Trace(prefix + m.name + "-" + m.version + " has been installed")
 		return errors
 	} else {
-		var s sync.Mutex
-		module_install_locks[m.url] = s
-		s.Lock()
-		defer s.Unlock()
+		ch := make(chan int)
+		module_install_chans[m.name] = ch
+		defer func(ch chan int) {
+			log.Trace("Releasing channel for %s", m.name)
+			module_install_chans[m.name] = nil
+			ch <- 1
+		}(ch)
 	}
 
-	log.Printf(prefix + "Installing %s-%s: %s", m.name, m.version, m.url)
+	log.Printf(prefix+"Installing %s-%s: %s", m.name, m.version, m.cached)
 
 	for _, dep := range m.deps {
 		if dep.module != nil {
@@ -286,11 +310,11 @@ func installModule(m *Module, depth int) []string {
 				for _, err := range errs {
 					if !strings.HasPrefix(strings.ToLower(err), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(err), "text file busy") {
 						log.Error(prefix + m.name + "-" + m.version + " failed to install")
-						errors = append(errors, "Error installing dependency for " + m.name + "-" + m.version + ": " + dep.module.name + "-" + dep.module.version + ": " + err)
+						errors = append(errors, "Error installing dependency for "+m.name+"-"+m.version+": "+dep.module.name+"-"+dep.module.version+": "+err)
 					}
 				}
 			}
-			//log.Printf(prefix + "Resuming installation of %s-%s: %s", m.name, m.version, m.url)
+			log.Printf(prefix+"Resuming installation of %s-%s: %s", m.name, m.version, m.cached)
 		}
 	}
 
@@ -300,8 +324,8 @@ func installModule(m *Module, depth int) []string {
 		c = exec.Command("cpanm", "-l", "./local", m.cached, "--notest")
 	} else {
 		c = exec.Command("cpanm", "-l", "./local", m.cached)
-	}	
-	
+	}
+
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
@@ -326,14 +350,14 @@ func installModule(m *Module, depth int) []string {
 
 	if err := c.Wait(); err != nil {
 		if !strings.HasPrefix(strings.ToLower(stderr.String()), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(stderr.String()), "text file busy") &&
-		   !strings.HasPrefix(strings.ToLower(stdout.String()), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(stdout.String()), "text file busy") {
-		   	log.Error(prefix + m.name + "-" + m.version + " failed to install")
+			!strings.HasPrefix(strings.ToLower(stdout.String()), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(stdout.String()), "text file busy") {
+			log.Error(prefix + m.name + "-" + m.version + " failed to install")
 			errors = append(errors, fmt.Sprintf("Error installing %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.name, m.version, err, stderr.String(), stdout.String()))
 			return errors
 		}
 	}
-	
-	log.Printf(prefix + "Installed " + m.name + " " + m.version)
+
+	log.Printf(prefix + "Installed " + m.name + " (" + m.version + ")")
 	return errors
 }
 
@@ -342,13 +366,30 @@ func flattenForMod(m *Module) string {
 	if m.formod != nil {
 		s = flattenForMod(m.formod) + "->" + s
 	}
-	return s	
+	return s
+}
+
+func printDepTree(m *Module, d int) {
+	indent := ""
+	for i := 0; i < d; i++ {
+		indent = indent + "  "
+	}
+	log.Info(indent+"%s (%s): %s", m.name, m.version, m.cached)
+	if m.deps != nil && len(m.deps) > 0 {
+		for _, dep := range m.deps {
+			if dep.module == nil {
+				log.Info(dep.name + " not found")
+				continue
+			}
+			printDepTree(dep.module, d+1)
+		}
+	}
 }
 
 func downloadModule(m *Module) []string {
 	errors := make([]string, 0)
 
-	if _, ok := module_download_locks[m.name + "-" + m.version]; ok {
+	if _, ok := module_download_locks[m.name+"-"+m.version]; ok {
 		// Doesn't matter for downloads (assuming they come from the same *PAN)
 		//log.Printf("Waiting on download lock for " + flattenForMod(m))
 		//mt.Lock()
@@ -359,7 +400,7 @@ func downloadModule(m *Module) []string {
 	var s sync.Mutex
 	s.Lock()
 	defer s.Unlock()
-	module_download_locks[m.name + "-" + m.version] = s
+	module_download_locks[m.name+"-"+m.version] = s
 
 	os.MkdirAll(".cpancache", 0777)
 
@@ -379,7 +420,7 @@ func downloadModule(m *Module) []string {
 			errors = append(errors, err.Error())
 			return errors
 		}
-		defer resp.Body.Close();
+		defer resp.Body.Close()
 
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
@@ -388,7 +429,7 @@ func downloadModule(m *Module) []string {
 		}
 
 		c := exec.Command("tar", "-zxf", m.cached, "-C", ".cpancache/")
-		
+
 		var stdout2 bytes.Buffer
 		var stderr2 bytes.Buffer
 
@@ -418,7 +459,7 @@ func loadDependencies(m *Module) []string {
 	yml, err := ioutil.ReadFile(m.dir + "/META.yml")
 	if err != nil {
 		// TODO this isnt an error (it shouldnt make build fail)
-		log.Printf("Error opening META.yml for %s: %s", m.name, err)
+		log.Error("Error opening META.yml for %s: %s", m.name, err)
 		return errors
 	}
 
@@ -426,7 +467,7 @@ func loadDependencies(m *Module) []string {
 	err = yaml.Unmarshal(yml, &meta)
 	if err != nil {
 		// TODO this isnt an error (it shouldnt make build fail)
-		log.Printf("Error parsing YAML: %s", err)
+		log.Error("Error parsing YAML: %s", err)
 		return errors
 	}
 
@@ -434,36 +475,42 @@ func loadDependencies(m *Module) []string {
 		if m.deps == nil {
 			m.deps = make([]*Dependency, 0)
 		}
-		log.Printf("Found dependencies for module %s", m.name)
+		log.Debug("Found dependencies for module %s", m.name)
 		switch reqs.(type) {
 		case map[interface{}]interface{}:
 			for req, ver := range reqs.(map[interface{}]interface{}) {
-				log.Printf("=> %s (%f)", req, ver)
+				v := float64(0)
+				switch ver.(type) {
+				case string:
+					v, _ = strconv.ParseFloat(ver.(string), 64)
+				case int:
+					v = float64(ver.(int))
+				}
+				log.Printf("=> %s (%f)", req, v)
 				dep := DependencyFromString(req.(string), fmt.Sprintf("%f", ver))
+				if _, ok := perl_core[dep.name]; ok {
+					continue
+				}
 				m.deps = append(m.deps, dep)
 			}
 		}
 
 		for _, dep := range m.deps {
-			if _, ok := perl_core[dep.name]; ok {
-				continue
-			}
-
-			if cpandep, ok := cpanindex[dep.name]; ok {		
-				if dep.Matches(cpandep) {	
-					depcount++			
-					log.Printf("  => %s (%s %s) found in CPAN: %s", dep.name, dep.modifier, dep.version, cpandep.url)
+			if cpandep, ok := cpanindex[dep.name]; ok {
+				if dep.Matches(cpandep) {
+					depcount++
+					log.Debug("  => %s (%s %s) found in CPAN: %s", dep.name, dep.modifier, dep.version, cpandep.url)
 					dep.module = cpandep
 					dep.module.formod = m
 					downloadModule(dep.module)
 					continue
 				}
 
-				log.Printf("%s (%s) found in CPAN doesn't match requested version '%s %s'", dep.name, cpandep.version, dep.modifier, dep.version)
-			} 
+				log.Debug("%s (%s) found in CPAN doesn't match requested version '%s %s'", dep.name, cpandep.version, dep.modifier, dep.version)
+			}
 
 			// TODO better versioning (e.g. 3.00 doesn't match 3.0)
-			if backpandep, ok := backpanindex[dep.name + "-" + dep.version]; ok {
+			if backpandep, ok := backpanindex[dep.name+"-"+dep.version]; ok {
 				depcount++
 				log.Printf("  => %s (%s %s) found in BackPAN: %s", dep.name, dep.modifier, dep.version, backpandep.url)
 				dep.module = backpandep
@@ -473,44 +520,55 @@ func loadDependencies(m *Module) []string {
 			}
 
 			depcount++
-			errors = append(errors, "  => Dependency not found: " + dep.name + " (" + dep.modifier + " " + dep.version + ")")
+			log.Error("  => Dependency not found: " + dep.name + " (" + dep.modifier + " " + dep.version + ")")
+			errors = append(errors, "  => Dependency not found: "+dep.name+" ("+dep.modifier+" "+dep.version+")")
+		}
+
+		if len(m.deps) == 0 {
+			log.Debug("No dependencies for module %s", m.name)
 		}
 
 		return errors
 	}
 
-	log.Printf("No dependencies for module %s", m.name)
+	log.Debug("No dependencies for module %s", m.name)
 	return errors
 }
 
 func main() {
-	log.Logger().Appender().SetLayout(layout.Pattern("[%d] [%p] %m"))
-	log.Logger().SetLevel(log.Stol("TRACE"))
+
+	loglevel := "INFO"
+	noinstall := false
 
 	mirrors = make([]string, 0)
 	flag.Var((*AppendSliceValue)(&mirrors), "mirror", "A CPAN mirror (can be specified multiple times)")
 	notest = make([]string, 0)
 	flag.Var((*AppendSliceValue)(&notest), "notest", "A module to install without testing (can be specified multiple times)")
 	flag.StringVar(&cpanfile, "cpanfile", "cpanfile", "The cpanfile to install")
-	flag.IntVar(&max, "cpus", runtime.NumCPU(), "The number of CPUs to use, defaults to " + strconv.Itoa(runtime.NumCPU()) + " for your environment")
+	flag.IntVar(&max, "cpus", runtime.NumCPU(), "The number of CPUs to use, defaults to "+strconv.Itoa(runtime.NumCPU())+" for your environment")
+	flag.BoolVar(&noinstall, "noinstall", false, "Disable installation phase")
+	flag.StringVar(&loglevel, "loglevel", loglevel, "Output log level (ERROR, INFO, WARN, DEBUG, TRACE)")
 	flag.Parse()
+
+	log.Logger().Appender().SetLayout(layout.Pattern("[%d] [%p] %m"))
+	log.Logger().SetLevel(log.Stol(loglevel))
 
 	notestm = make(map[string]int)
 	for _, n := range notest {
 		notestm[n] = 1
-		log.Printf("Skipping tests for: %s", n)
+		log.Info("Skipping tests for: %s", n)
 	}
 
-	log.Printf("Using cpanfile: %s", cpanfile)
+	log.Info("Using cpanfile: %s", cpanfile)
 
 	bytes, err := ioutil.ReadFile(cpanfile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Using mirror: http://www.cpan.org")	
+	log.Info("Using mirror: http://www.cpan.org")
 	for _, mirror := range mirrors {
-		log.Printf("Using mirror: %s", mirror)
+		log.Info("Using mirror: %s", mirror)
 	}
 
 	// FIXME putting primary CPAN before mirrors means mirrors take priority
@@ -528,27 +586,31 @@ func main() {
 	errors := make([]string, 0)
 
 	for _, l := range lines {
-		if len(l) == 0 { continue }
+		if len(l) == 0 {
+			continue
+		}
 
 		matches := re.FindStringSubmatch(l)
 		module := matches[1]
-		
+
 		dependency := DependencyFromString(module, matches[2])
 
 		deps[module] = dependency
 
-		if cpandep, ok := cpanindex[module]; ok {		
-			if dependency.Matches(cpandep) {				
-				log.Printf("%s (%s %s) found in CPAN: %s", module, dependency.modifier, dependency.version, cpandep.url)
+		log.Info(module + " (" + dependency.modifier + " " + dependency.version + ")")
+
+		if cpandep, ok := cpanindex[module]; ok {
+			if dependency.Matches(cpandep) {
+				log.Debug("%s (%s %s) found in CPAN: %s", module, dependency.modifier, dependency.version, cpandep.url)
 				deps[module].module = cpandep
 			} else {
-				// log.Printf("%s (%s) found in CPAN doesn't match requested version '%s %s'", module, cpandep.version, dependency.modifier, dependency.version)
+				log.Debug("%s (%s) found in CPAN doesn't match requested version '%s %s'", module, cpandep.version, dependency.modifier, dependency.version)
 			}
-		} 
+		}
 
 		// TODO better versioning (e.g. 3.00 doesn't match 3.0)
-		if backpandep, ok := backpanindex[module + "-" + dependency.version]; ok {
-			log.Printf("%s (%s %s) found in BackPAN: %s", module, dependency.modifier, dependency.version, backpandep.url)
+		if backpandep, ok := backpanindex[module+"-"+dependency.version]; ok {
+			log.Debug("%s (%s %s) found in BackPAN: %s", module, dependency.modifier, dependency.version, backpandep.url)
 			deps[module].module = backpandep
 		}
 
@@ -559,7 +621,7 @@ func main() {
 			comment = strings.Trim(comment, " ")
 			new_reqs := strings.Split(comment, ";")
 			for _, req := range new_reqs {
-				log.Printf("Adding additional dependency: %s", req)
+				log.Debug("Adding additional dependency: %s", req)
 				req = strings.Trim(req, " ")
 				bits := strings.Split(req, "-")
 				mod := bits[0]
@@ -568,87 +630,45 @@ func main() {
 
 				dependency.module.deps = append(dependency.module.deps, new_dep)
 
-				if cpandep, ok := cpanindex[mod]; ok {		
-					if new_dep.Matches(cpandep) {				
-						log.Printf("%s (%s %s) found in CPAN: %s", mod, new_dep.modifier, new_dep.version, cpandep.url)
+				if cpandep, ok := cpanindex[mod]; ok {
+					if new_dep.Matches(cpandep) {
+						log.Debug("%s (%s %s) found in CPAN: %s", mod, new_dep.modifier, new_dep.version, cpandep.url)
 						new_dep.module = cpandep
 						continue
 					}
 
-					log.Printf("%s (%s) found in CPAN doesn't match requested version '%s %s'", module, cpandep.version, new_dep.modifier, new_dep.version)
-				} 
+					log.Debug("%s (%s) found in CPAN doesn't match requested version '%s %s'", module, cpandep.version, new_dep.modifier, new_dep.version)
+				}
 
 				// TODO better versioning (e.g. 3.00 doesn't match 3.0)
-				if backpandep, ok := backpanindex[mod + "-" + ver]; ok {
-					log.Printf("%s (%s %s) found in BackPAN: %s", mod, new_dep.modifier, new_dep.version, backpandep.url)
+				if backpandep, ok := backpanindex[mod+"-"+ver]; ok {
+					log.Debug("%s (%s %s) found in BackPAN: %s", mod, new_dep.modifier, new_dep.version, backpandep.url)
 					new_dep.module = backpandep
 					continue
 				}
 
 				reqcount++
 
-				errors = append(errors, mod + " (" + new_dep.modifier + " " + new_dep.version + ") not found")
+				log.Warn("Dependency " + module + " (" + new_dep.modifier + " " + new_dep.version + ") not found")
+				errors = append(errors, mod+" ("+new_dep.modifier+" "+new_dep.version+") not found")
 			}
 		}
 
 		reqcount++
 
 		if deps[module].module == nil {
-			errors = append(errors, module + " (" + dependency.modifier + " " + dependency.version + ") not found")
+			log.Warn("Dependency " + module + " (" + dependency.modifier + " " + dependency.version + ") not found")
+			errors = append(errors, module+" ("+dependency.modifier+" "+dependency.version+") not found")
 		}
 	}
 
-	if len(errors) > 0 {
-		log.Println("Failed to find dependencies:")
-		for _, err := range errors {
-			log.Println(err)
-		}
-		return
-	}
-
-	log.Printf("Found %d dependencies in cpanfile")
+	log.Info("Found %d dependencies in cpanfile", len(deps))
 
 	var wg sync.WaitGroup
 	semaphore := make(chan int, max)
 	var errorLock sync.Mutex
 
-	log.Printf("Number of parallel downloads/installs: %d", max)
-	
-	for _, dep := range deps {
-		wg.Add(1)		
-		go func(dep *Dependency) {
-			defer wg.Done()
-			if dep.module == nil {
-				errorLock.Lock()
-				defer errorLock.Unlock()
-				errors = append(errors, "No source found for module: " + dep.name + " (" + dep.version + ")")
-				return
-			}
-			semaphore <- 1
-			log.Printf("Downloading: %s", dep.module.url)
-			errs := downloadModule(dep.module)
-			if len(errs) > 0 {
-				errorLock.Lock()
-				defer errorLock.Unlock()
-				for _, r := range errs {
-					errors = append(errors, "Error downloading module " + dep.name + ": " + r)
-				}
-				return
-			}
-			<-semaphore
-		}(dep)
-	}
-	wg.Wait()
-
-	if len(errors) > 0 {
-		log.Printf("Failed to download dependencies (%d found):", depcount)
-		for _, err := range errors {
-			log.Println(err)
-		}
-		return
-	}
-
-	log.Printf("Found %d additional dependencies (%d total)", depcount, depcount + reqcount)
+	log.Debug("Number of parallel downloads/installs: %d", max)
 
 	for _, dep := range deps {
 		wg.Add(1)
@@ -657,16 +677,89 @@ func main() {
 			if dep.module == nil {
 				errorLock.Lock()
 				defer errorLock.Unlock()
-				errors = append(errors, "No install for module: " + dep.name)
+				errors = append(errors, "No source found for module: "+dep.name+" ("+dep.version+")")
+				return
+			}
+			semaphore <- 1
+			log.Debug("Downloading: %s", dep.module.url)
+			errs := downloadModule(dep.module)
+			if len(errs) > 0 {
+				errorLock.Lock()
+				defer errorLock.Unlock()
+				for _, r := range errs {
+					errors = append(errors, "Error downloading module "+dep.name+": "+r)
+				}
+				return
+			}
+			<-semaphore
+		}(dep)
+	}
+	wg.Wait()
+
+	log.Info("Found %d additional dependencies", depcount)
+
+	log.Info("Dependency tree:")
+	for _, dep := range deps {
+		if dep.module == nil {
+			log.Info(dep.name + " not found")
+			continue
+		}
+		printDepTree(dep.module, 0)
+	}
+
+	if len(errors) > 0 {
+		log.Error("Failed to find dependencies:")
+		for _, err := range errors {
+			log.Error(err)
+		}
+		return
+	}
+
+	log.Info("Found %d dependencies", depcount+reqcount)
+
+	if noinstall {
+		log.Info("Skipping installation phase (-noinstall)")
+		return
+	}
+
+	tt := time.NewTicker(10 * time.Second)
+	tc := make(chan int)
+	go func() {
+		for {
+			select {
+			case <-tt.C:
+				log.Trace("Waiting on installation channels for:")
+				for k, v := range module_install_chans {
+					if v != nil {
+						log.Trace("=> %s", k)
+					}
+				}
+			case <-tc:
+				tt.Stop()
+				return
+			}
+		}
+	}()
+
+	for _, dep := range deps {
+		wg.Add(1)
+		go func(dep *Dependency) {
+			defer wg.Done()
+			if dep.module == nil {
+				errorLock.Lock()
+				defer errorLock.Unlock()
+				log.Error("No install for module: %s", dep.name)
+				errors = append(errors, "No install for module: "+dep.name)
 				return
 			}
 			semaphore <- 1
 			errs := installModule(dep.module, 0)
 			if len(errs) > 0 {
 				errorLock.Lock()
-				errors = append(errors, "Error installing module " + dep.name + ":")
+				log.Error("Error installing module: %s", dep.name)
+				errors = append(errors, "Error installing module "+dep.name+":")
 				for _, err := range errs {
-					errors = append(errors, "    " + err)
+					errors = append(errors, "    "+err)
 				}
 				errorLock.Unlock()
 			}
@@ -675,13 +768,15 @@ func main() {
 	}
 	wg.Wait()
 
+	tc <- 1
+
 	if len(errors) > 0 {
-		log.Println("Failed installation:")
+		log.Error("Failed installation:")
 		for _, err := range errors {
 			log.Println(err)
 		}
 		return
 	}
 
-	log.Printf("Successfully installed %d modules", depcount + reqcount)
+	log.Info("Successfully installed %d modules", depcount+reqcount)
 }
