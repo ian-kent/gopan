@@ -1,27 +1,27 @@
 package main
 
 import (
-	"runtime"
 	"flag"
-	"strconv"
-	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/go-log/layout"
+	"github.com/ian-kent/go-log/log"
 	"os"
+	"runtime"
+	"strconv"
 )
 
 type NoTestConfig struct {
-	Global bool
+	Global  bool
 	Modules map[string]bool
 }
 
 type Config struct {
-	Sources []*Source
-	NoTest *NoTestConfig
+	Sources   []*Source
+	NoTest    *NoTestConfig
 	NoInstall bool
-	CPANFile string
-	LogLevel string
-	CPUs int
-	CacheDir string
+	CPANFile  string
+	LogLevel  string
+	CPUs      int
+	CacheDir  string
 }
 
 func (c *Config) Dump() {
@@ -59,13 +59,13 @@ func DefaultConfig() *Config {
 	return &Config{
 		Sources: DefaultSources(),
 		NoTest: &NoTestConfig{
-			Global: false,
+			Global:  false,
 			Modules: make(map[string]bool),
 		},
 		NoInstall: false,
-		LogLevel: "INFO",
-		CPUs: runtime.NumCPU(),
-		CacheDir: ".gopancache",
+		LogLevel:  "INFO",
+		CPUs:      runtime.NumCPU(),
+		CacheDir:  ".gopancache",
 	}
 }
 
@@ -105,13 +105,13 @@ func Configure() *Config {
 
 	// parse cpan mirrors
 	for _, mirror := range cpan {
-		m := NewSource("CPAN", mirror + "/modules/02packages.details.txt.gz", mirror)
+		m := NewSource("CPAN", mirror+"/modules/02packages.details.txt.gz", mirror)
 		conf.Sources = append(conf.Sources, m)
 	}
 
 	// parse backpan mirrors
 	for _, mirror := range backpan {
-		m := NewSource("BackPAN", mirror + "/backpan-index", mirror) // FIXME
+		m := NewSource("BackPAN", mirror+"/backpan-index", mirror) // FIXME
 		conf.Sources = append(conf.Sources, m)
 	}
 

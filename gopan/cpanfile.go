@@ -46,7 +46,7 @@ func ParseCPANLine(line string) (*Dependency, error) {
 	}
 
 	log.Info("%s (%s %s)", module, dependency.modifier, dependency.version)
-	
+
 	return dependency, err
 }
 
@@ -61,10 +61,12 @@ func ParseCPANFile(file string) (*CPANFile, error) {
 	lines := strings.Split(string(bytes), "\n")
 
 	for _, l := range lines {
-		if len(l) == 0 { continue }
+		if len(l) == 0 {
+			continue
+		}
 
 		log.Trace("Parsing line: %s", l)
-		dep, err := ParseCPANLine(l);
+		dep, err := ParseCPANLine(l)
 
 		if err != nil {
 			log.Error("=> Error parsing line: %s", err)

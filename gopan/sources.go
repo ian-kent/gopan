@@ -1,34 +1,35 @@
 package main
 
 import (
-	"net/http"
-	"github.com/ian-kent/go-log/log"
-	"regexp"
-	"fmt"
-	"errors"
 	"compress/gzip"
+	"errors"
+	"fmt"
+	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
-	"strings"
+	"net/http"
 	"os"
+	"regexp"
+	"strings"
 )
 
 // Matches cpan 02packages.details.txt format
 var cpanRe = regexp.MustCompile("^\\s*([^\\s]+)\\s*([^\\s]+)\\s*(.*)$")
+
 // Matches gitpan backpan-index format
 var backpanRe = regexp.MustCompile("^authors/id/\\w/\\w{2}/\\w+/([^\\s]+)[-_]v?([\\d\\._\\w]+)(?:-\\w+)?.tar.gz$")
 
 type Source struct {
-	Type string
-	Index string
-	URL string
+	Type       string
+	Index      string
+	URL        string
 	ModuleList map[string]*Module
 }
 
 func NewSource(Type string, Index string, URL string) *Source {
 	return &Source{
-		Type: Type,
-		Index: Index,
-		URL: URL,
+		Type:       Type,
+		Index:      Index,
+		URL:        URL,
 		ModuleList: make(map[string]*Module),
 	}
 }
@@ -38,7 +39,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 
 	switch s.Type {
 	case "CPAN":
-		log.Debug("=> Using CPAN source")		
+		log.Debug("=> Using CPAN source")
 		if mod, ok := s.ModuleList[d.name]; ok {
 			log.Trace("=> Found in source: %s", mod)
 			if d.Matches(mod) {
@@ -51,7 +52,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 	case "BackPAN":
 		log.Debug("=> Using BackPAN source")
 		// TODO better version matching - new backpan index?
-		if mod, ok := s.ModuleList[d.name + "-" + d.version]; ok {
+		if mod, ok := s.ModuleList[d.name+"-"+d.version]; ok {
 			log.Trace("=> Found in source: %s", mod)
 			if d.Matches(mod) {
 				log.Trace("=> Version (%s) matches dependency: %s", mod.version, d)
@@ -77,7 +78,7 @@ func (s *Source) Load() error {
 
 	switch s.Type {
 	case "CPAN":
-		log.Debug("=> Got CPAN source")		
+		log.Debug("=> Got CPAN source")
 		return s.loadCPANSource()
 	case "BackPAN":
 		log.Debug("=> Got BackPAN source")

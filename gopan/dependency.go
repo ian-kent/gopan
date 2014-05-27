@@ -1,27 +1,27 @@
 package main
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"github.com/ian-kent/go-log/log"
+	"gopkg.in/yaml.v1"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
-	"errors"
-	"fmt"
 	"sync"
-	"os"
-	"net/http"
-	"io"
-	"os/exec"
-	"bytes"
-	"path"
-	"io/ioutil"
-	"gopkg.in/yaml.v1"
 	"time"
 )
 
 type DependencyList struct {
 	Dependencies []*Dependency
-	parent *Module
+	parent       *Module
 }
 
 var global_modules = make(map[string]*Module)
@@ -34,10 +34,10 @@ var install_mutex = make(map[string]*sync.Mutex)
 var install_semaphore chan int
 
 type Dependency struct {
-	name     string
-	version  string
-	modifier string
-	module   *Module
+	name       string
+	version    string
+	modifier   string
+	module     *Module
 	additional []*Dependency
 }
 
@@ -46,15 +46,15 @@ func (d *Dependency) String() string {
 }
 
 type Module struct {
-	name    string
-	version string
-	url     string
-	source  *Source
-	cached  string
+	name      string
+	version   string
+	url       string
+	source    *Source
+	cached    string
 	extracted string
-	dir     string
-	deps    *DependencyList
-	formod  *Module
+	dir       string
+	deps      *DependencyList
+	formod    *Module
 }
 
 func (m *Module) String() string {
@@ -116,12 +116,12 @@ func (d *DependencyList) Install() (int, error) {
 					log.Debug("Resuming installation of %s", mod)
 				}
 			}(d.parent)
-			
+
 			_, ok1 := global_installed[dep.module.cached]
-			_, ok2 := global_installed[dep.module.name + "-" + dep.module.version]
+			_, ok2 := global_installed[dep.module.name+"-"+dep.module.version]
 			if ok1 || ok2 {
-			   	log.Trace("Module is already installed: %s", dep.module)
-			   	return
+				log.Trace("Module is already installed: %s", dep.module)
+				return
 			}
 
 			log.Trace("Aquiring install lock for module %s", dep.module)
@@ -132,7 +132,7 @@ func (d *DependencyList) Install() (int, error) {
 				log.Trace("Path: %s", dep.module.Path())
 				mt.Lock()
 				mt.Unlock()
-				log.Trace("Existing installation complete for %s", dep.module)				
+				log.Trace("Existing installation complete for %s", dep.module)
 				return
 			}
 
@@ -149,7 +149,7 @@ func (d *DependencyList) Install() (int, error) {
 			//<-install_semaphore
 			//log.Trace("%s:: Got semaphore", dep.module)
 
-			global_installed[dep.module.name + "-" + dep.module.version] = dep.module
+			global_installed[dep.module.name+"-"+dep.module.version] = dep.module
 			global_installed[dep.module.cached] = dep.module
 
 			n += o
@@ -199,7 +199,7 @@ func (d *DependencyList) Resolve() error {
 
 			semaphore <- 1
 
-			if gm, ok := global_modules[dep.name + "-" + dep.version]; ok {
+			if gm, ok := global_modules[dep.name+"-"+dep.version]; ok {
 				log.Trace("Dependency %s already resolved (S1): %s", dep, gm)
 				dep.module = gm
 				<-semaphore
@@ -217,7 +217,7 @@ func (d *DependencyList) Resolve() error {
 				return
 			}
 
-			if gm, ok := global_modules[dep.module.name + "-" + dep.module.version + "~" + dep.module.source.URL]; ok {
+			if gm, ok := global_modules[dep.module.name+"-"+dep.module.version+"~"+dep.module.source.URL]; ok {
 				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.module)
 				dep.module = gm
 				<-semaphore
@@ -242,12 +242,12 @@ func (d *DependencyList) Resolve() error {
 				}
 			}
 
-			global_modules[dep.module.name + "-" + dep.module.version] = dep.module
-			global_modules[dep.module.name + "-" + dep.module.version + "~" + dep.module.source.URL] = dep.module
+			global_modules[dep.module.name+"-"+dep.module.version] = dep.module
+			global_modules[dep.module.name+"-"+dep.module.version+"~"+dep.module.source.URL] = dep.module
 
 			log.Debug("Resolving module dependencies: %s", dep.module)
 			dep.module.deps = &DependencyList{
-				parent: dep.module,
+				parent:       dep.module,
 				Dependencies: make([]*Dependency, 0),
 			}
 
@@ -352,7 +352,7 @@ func (v *Dependency) Matches(module *Module) bool {
 	return valid
 }
 
-func DependencyFromString(name string, dependency string) (*Dependency, error) {	
+func DependencyFromString(name string, dependency string) (*Dependency, error) {
 	matches := versionRe.FindStringSubmatch(dependency)
 
 	if len(matches) == 3 {
@@ -364,9 +364,9 @@ func DependencyFromString(name string, dependency string) (*Dependency, error) {
 		}
 
 		dep := &Dependency{
-			name:     name,
-			version:  matches[2],
-			modifier: matches[1],
+			name:       name,
+			version:    matches[2],
+			modifier:   matches[1],
 			additional: make([]*Dependency, 0),
 		}
 		return dep, nil
@@ -386,7 +386,7 @@ func MkIndent(d int) string {
 func (deps *DependencyList) PrintDeps(d int) {
 	for _, dep := range deps.Dependencies {
 		if dep.module == nil {
-			log.Info(MkIndent(0) + "%s not found", dep.name)
+			log.Info(MkIndent(0)+"%s not found", dep.name)
 			continue
 		}
 		dep.module.PrintDeps(d + 1)
@@ -427,7 +427,7 @@ func (m *Module) Download() error {
 		file_lock.Unlock()
 		log.Trace("Lock aquired: %s", m.cached)
 	}
-	
+
 	if _, err := os.Stat(m.cached); err != nil {
 		os.MkdirAll(m.dir, 0777)
 		out, err := os.Create(m.cached)
@@ -570,7 +570,7 @@ func (m *Module) Install() (int, error) {
 	attempts := 0
 	for !done {
 		time.Sleep(time.Duration(100) * time.Millisecond)
-		
+
 		c = m.getCmd()
 		stdout = new(bytes.Buffer)
 		stderr = new(bytes.Buffer)
