@@ -1,5 +1,7 @@
 requires 'Mojolicious', '== 4.99';  # REQS: Some::Module-1.27; Another::Module-0.62
 requires 'Mojolicious', '== 4.92';
 requires 'Mojolicious', '== 3.01';
+requires 'Mojolicious', '== 4.63';
 requires 'Mojolicious', '>= 4.63';
 requires 'Mojolicious', '4.63';
+requires 'Mojo::Base', '== 4.99';
