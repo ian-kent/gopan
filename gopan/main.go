@@ -285,9 +285,24 @@ func installModule(m *Module, depth int) []string {
 			log.Printf(prefix+"Detected circular dependency: %s", fm)
 			return errors
 		}
-
 		log.Trace(prefix+"(%d) Waiting on install channel for %s", depth, m.name)
 		log.Trace("^ %s", fm)
+		//tt := time.NewTicker(10 * time.Second)
+		//for {
+		//	select {
+		//	case <-tt.C:
+		//		log.Trace(prefix+"(%d) Still waiting on install channel for %s", depth, m.name)
+		//		if m.formod != nil {
+		//			log.Trace(prefix+"^ Parent is %s (%s)", m.formod.name, m.formod.version)
+		//		}
+		//		if _, ok := module_install_chans[mname]; !ok {
+		//			log.Trace(prefix+"^ Installation is complete? Lost channel")
+		//			break
+		//		}
+		//	case <-ch:
+		//		break
+		//	}
+		//}
 		<-ch
 		log.Trace(prefix + m.name + "-" + m.version + " has been installed")
 		return errors
@@ -305,6 +320,7 @@ func installModule(m *Module, depth int) []string {
 
 	for _, dep := range m.deps {
 		if dep.module != nil {
+			log.Trace(prefix+"=> Found dependency %s (%s)", dep.module.name, dep.module.version)
 			errs := installModule(dep.module, depth)
 			if len(errs) > 0 {
 				for _, err := range errs {
@@ -315,6 +331,8 @@ func installModule(m *Module, depth int) []string {
 				}
 			}
 			log.Printf(prefix+"Resuming installation of %s-%s: %s", m.name, m.version, m.cached)
+		} else {
+			log.Trace(prefix+"=> Found dependency %s (%s) but no installation found", dep.name, dep.version)
 		}
 	}
 
