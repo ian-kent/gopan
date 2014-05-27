@@ -9,6 +9,7 @@ A multithreaded Perl dependency manager.
 - Supports multiple CPAN mirrors
 - Supports BackPAN for old module versions
 - Per-module notest and dependency fixes
+- Should work on most platforms (requires cpanm!)
 
 ```
     ./get_backpan_index.sh
