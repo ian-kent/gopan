@@ -19,6 +19,11 @@ func ParseCPANLine(line string) (*Dependency, error) {
 	}
 
 	matches := re.FindStringSubmatch(line)
+	if len(matches) == 0 {
+		log.Trace("Unable to parse line: %s", line)
+		return nil, nil
+	}
+
 	module := matches[1]
 	version := matches[2]
 	comment := matches[3]
