@@ -131,7 +131,7 @@ func (s *Source) loadBackPANSource() error {
 
 	file, err := os.Open("backpan-index")
 	if err != nil {
-		log.Warn(err)
+		log.Warn(err.Error())
 		return nil
 	}
 
