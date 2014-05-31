@@ -5,3 +5,4 @@ requires 'Mojolicious', '== 4.63';
 requires 'Mojolicious', '>= 4.63';
 requires 'Mojolicious', '4.63';
 requires 'Mojo::Base', '== 4.99';
+requires 'Mojolicious';

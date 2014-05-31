@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var re = regexp.MustCompile("^\\s*requires\\s+['\"]([^'\"]+)['\"](?:,\\s+['\"]([^'\"]+)['\"])?;\\s*(#.*)?")
+var re = regexp.MustCompile("^\\s*requires\\s+['\"]([^'\"]+)['\"](,\\s+['\"]([^'\"]+)['\"])?;\\s*(#.*)?")
 
 type CPANFile struct {
 	DependencyList

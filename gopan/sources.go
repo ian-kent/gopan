@@ -94,7 +94,7 @@ func (s *Source) loadCPANSource() error {
 
 	res, err := http.Get(s.Index)
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err)
 	}
 
 	// TODO optional gzip
@@ -131,7 +131,8 @@ func (s *Source) loadBackPANSource() error {
 
 	file, err := os.Open("backpan-index")
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err)
+		return nil
 	}
 
 	index, err := ioutil.ReadAll(file)
