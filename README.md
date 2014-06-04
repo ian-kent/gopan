@@ -16,7 +16,20 @@ A multithreaded Perl dependency manager.
 	gopan -cpanfile application.cpanfile -cpan http://your.mirror -cpan http://another.mirror
 ```
 
-### command line options
+Also includes a *PAN mirroring tool:
+
+```
+    pandex
+```
+
+### gopan
+
+`gopan` resolves cpanfile dependencies and caches the module releases locally.
+
+It installs CPAN modules to `./local`. It's carton compatible, so running 
+`carton install` after gopan creates a cpanfile.snapshot file.
+
+#### Command line options
 
 | Option            | Example                          | Description
 | ---------         | -------                          | -----------
@@ -30,6 +43,29 @@ A multithreaded Perl dependency manager.
 | -nevertest        | -nevertest                       | Disables all installation tests
 | -noinstall        | -noinstall                       | If provided, install phase will be skipped
 | -notest           | -notest AnyCache                 | Disables module tests
+
+### pandex
+
+`pandex` brute-force mirrors a *PAN repository by scanning the HTML indexes for links.
+
+This allows it to work behind a HTTP proxy.
+
+It first indexes the authors, then packages, and finally downloads all packages to a local cache.
+
+**WARNING** It'll download approximately 20GB of data!
+
+By default, pandex will index both CPAN and BackPAN. As soon as you specify a `-source` parameter, both
+CPAN and BackPAN indexes will be disabled. You can add them again by specifying `-cpan` and `-backpan`
+
+#### Command line options
+
+| Option      | Example                                | Description
+| ---------   | -------                                | -----------
+| -h          | -h                                     | Display usage information
+| -backpan    | -backpan                               | Add the default BackPAN source (only required if using -source)
+| -cpan       | -cpan                                  | Add the default CPAN source (only required if using -source)
+| -loglevel   | -loglevel=TRACE                        | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
+| -source     | -source DarkPAN=http://path.to/darkpan | Adds a *PAN source to mirror
 
 ### cpanfile
 
@@ -60,6 +96,8 @@ using a custom syntax:
 ### get_backpan_index.sh
 
 Downloads the BackPAN index.
+
+Use this before running `gopan` if you want to include BackPAN sources.
 
 ### Why?
 
@@ -108,6 +146,7 @@ Current perl_core.go is against perl 5.18.2.
 - BackPAN version lookup support
   - multiple BackPAN indexes/URLs
   - index BackPAN versions so "Some::Module-1.01" is found for "Some::Module >= 1.00"
+- Option to automatically download BackPAN index
 - gopan exec?
 
 ### Pull requests
