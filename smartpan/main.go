@@ -49,6 +49,15 @@ func (p *PkgSpace) FullName() string {
 	return s
 }
 
+func (p *PkgSpace) Version() float64 {
+	// FIXME find latest
+	if len(p.Packages) == 0 {
+		return 0
+	}
+
+	return p.Packages[0].Package.Version()
+}
+
 func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 	if len(parts) > 0 {
 		if _, ok := p.Children[parts[0]]; !ok {

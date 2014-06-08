@@ -33,6 +33,10 @@
 			<th>Package</th>
 			<td>{{ .Package.FullName }}</td>
 		</tr>
+		<tr>
+			<th>Version</th>
+			<td>{{ .Package.Version }}</td>
+		</tr>
 		{{ if .Package.Packages }}
 		<tr>
 			<th>Provided by</th>
