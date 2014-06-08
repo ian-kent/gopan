@@ -1,0 +1,47 @@
+<style>
+	h1 {
+		margin-bottom: 0.5em;
+	}
+	h3 {
+		margin-top: 1em;
+		margin-bottom: 0.5em;
+	}
+</style>
+
+<h1>SmartPAN Help</h1>
+
+<ul>
+	<li><a href="#using-smartpan-with-getpan">Using SmartPAN with getpan</a></li>
+	<li><a href="#using-smartpan-with-cpanm-or-carton">Using SmartPAN with cpanm or Carton</a></li>
+</ul>
+
+
+<h3>Using SmartPAN with getpan</h3>
+
+<p>getpan natively supports SmartPAN.</p>
+
+<p>Pass the SmartPAN mirror with the <code>-smart</code> command line parameter:</p>
+
+<pre>getpan -smart http://path.to/smartpan</pre>
+
+<p>This should allow getpan to locate any version of any module from
+any of the available indexes.</p>
+
+
+<h3>Using SmartPAN with cpanm or Carton</h3>
+
+<p>cpanm and Carton will use the 02packages.details.txt file to locate modules.</p>
+
+<p>By default, SmartPAN will list the most recent version of each module in
+the 02packages file.</p>
+
+<p>This is per-index, so accessing SmartPAN using the CPAN or BackPAN URLs will
+typically find different module versions.</p>
+
+<p>The SmartPAN index will list the most recent version of a module available
+in any of the other indexes. Using the SmartPAN URL should consistently find
+the latest module version.</p>
+
+<pre>cpanm --mirror http://your.smartpan/repo/SmartPAN Some::Module
+cpanm --mirror http://your.smartpan/repo/SmartPAN --install-deps .
+PERL_CARTON_MIRROR=http://your.smartpan/repo/SmartPAN carton install</pre>

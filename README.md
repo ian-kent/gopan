@@ -13,7 +13,7 @@ A multithreaded Perl dependency manager.
 
 ```
     ./get_backpan_index.sh
-	gopan -cpanfile application.cpanfile -cpan http://your.mirror -cpan http://another.mirror
+	getpan -cpanfile application.cpanfile -cpan http://your.mirror -cpan http://another.mirror
 ```
 
 Also includes a *PAN mirroring tool:
@@ -22,12 +22,12 @@ Also includes a *PAN mirroring tool:
     pandex
 ```
 
-### gopan
+### getpan
 
-`gopan` resolves cpanfile dependencies and caches the module releases locally.
+`getpan` resolves cpanfile dependencies and caches the module releases locally.
 
 It installs CPAN modules to `./local`. It's carton compatible, so running 
-`carton install` after gopan creates a cpanfile.snapshot file.
+`carton install` after getpan creates a cpanfile.snapshot file.
 
 #### Command line options
 

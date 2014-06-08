@@ -1,0 +1,27 @@
+<h1>Import job {{ .jobid }}</h1>
+<hr>
+
+{{ if .Job }}
+	<table class="table">
+		<tr>
+			<th>Import into</th>
+			<td style="width: auto">{{ .Job.Form.ImportInto }}</td>
+		</tr>
+		<tr>
+			<th>Complete</th>
+			<td style="width: auto">{{ .Job.Complete }}</td>
+		</tr>
+		<tr>
+			<th>CPAN mirror</th>
+			<td style="width: auto">{{ .Job.Form.CPANMirror }}</td>
+		</tr>
+		<tr>
+			<th>Author ID</th>
+			<td style="width: auto">{{ .Job.Form.AuthorID }}</td>
+		</tr>
+	</table>
+
+	<iframe style="height: 500px" class="form-control" src="/import/{{.jobid}}/stream"></iframe>
+{{ else }}
+	<p class="text-danger">Job {{ .jobid }} not found</p>
+{{ end }}

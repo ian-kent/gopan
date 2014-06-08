@@ -1,4 +1,4 @@
-package main
+package getpan
 
 import (
 	"bytes"
@@ -21,12 +21,12 @@ import (
 
 type DependencyList struct {
 	Dependencies []*Dependency
-	parent       *Module
+	Parent       *Module
 }
 
 var global_modules = make(map[string]*Module)
 var global_installed = make(map[string]*Module)
-var versionRe = regexp.MustCompile("^([=><!]+)?\\s*(.*)$")
+var versionRe = regexp.MustCompile("^([=><!]+)?\\s*([v\\d\\._-]+)$")
 var file_lock = new(sync.Mutex)
 var file_get = make(map[string]*sync.Mutex)
 var install_lock = new(sync.Mutex)
@@ -34,55 +34,55 @@ var install_mutex = make(map[string]*sync.Mutex)
 var install_semaphore chan int
 
 type Dependency struct {
-	name       string
-	version    string
-	modifier   string
-	module     *Module
-	additional []*Dependency
+	Name       string
+	Version    string
+	Modifier   string
+	Module     *Module
+	Additional []*Dependency
 }
 
 func (d *Dependency) String() string {
-	return fmt.Sprintf("%s (%s %s)", d.name, d.modifier, d.version)
+	return fmt.Sprintf("%s (%s %s)", d.Name, d.Modifier, d.Version)
 }
 
 type Module struct {
-	name      string
-	version   string
-	url       string
-	source    *Source
-	cached    string
-	extracted string
-	dir       string
-	deps      *DependencyList
-	formod    *Module
+	Name      string
+	Version   string
+	Url       string
+	Source    *Source
+	Cached    string
+	Extracted string
+	Dir       string
+	Deps      *DependencyList
+	Formod    *Module
 }
 
 func (m *Module) String() string {
-	return fmt.Sprintf("%s (%s) from %s", m.name, m.version, m.source)
+	return fmt.Sprintf("%s (%s) from %s", m.Name, m.Version, m.Source)
 }
 
 func (m1 *Module) IsCircular(m2 *Module) bool {
-	if m1.cached == m2.cached {
+	if m1.Cached == m2.Cached {
 		return true
 	}
-	if m1.formod != nil {
-		return m1.formod.IsCircular(m2)
+	if m1.Formod != nil {
+		return m1.Formod.IsCircular(m2)
 	}
 	return false
 }
 
 func (m *Module) Path() string {
 	path := ""
-	if m.formod != nil {
-		path = m.formod.Path() + "->"
+	if m.Formod != nil {
+		path = m.Formod.Path() + "->"
 	}
-	path = path + m.name + "-" + m.version
+	path = path + m.Name + "-" + m.Version
 	return path
 }
 
 func (d *DependencyList) AddDependency(dep *Dependency) {
-	if _, ok := perl_core[dep.name]; ok {
-		log.Trace("Dependency " + dep.name + " is from perl core")
+	if _, ok := perl_core[dep.Name]; ok {
+		log.Trace("Dependency " + dep.Name + " is from perl core")
 		return
 	}
 	if d.Dependencies == nil {
@@ -115,52 +115,52 @@ func (d *DependencyList) Install() (int, error) {
 				if mod != nil {
 					log.Debug("Resuming installation of %s", mod)
 				}
-			}(d.parent)
+			}(d.Parent)
 
-			_, ok1 := global_installed[dep.module.cached]
-			_, ok2 := global_installed[dep.module.name+"-"+dep.module.version]
+			_, ok1 := global_installed[dep.Module.Cached]
+			_, ok2 := global_installed[dep.Module.Name+"-"+dep.Module.Version]
 			if ok1 || ok2 {
-				log.Trace("Module is already installed: %s", dep.module)
+				log.Trace("Module is already installed: %s", dep.Module)
 				return
 			}
 
-			log.Trace("Aquiring install lock for module %s", dep.module)
+			log.Trace("Aquiring install lock for module %s", dep.Module)
 			install_lock.Lock()
-			if mt, ok := install_mutex[dep.module.cached]; ok {
+			if mt, ok := install_mutex[dep.Module.Cached]; ok {
 				install_lock.Unlock()
-				log.Trace("Waiting on existing installation for %s", dep.module)
-				log.Trace("Path: %s", dep.module.Path())
+				log.Trace("Waiting on existing installation for %s", dep.Module)
+				log.Trace("Path: %s", dep.Module.Path())
 				mt.Lock()
 				mt.Unlock()
-				log.Trace("Existing installation complete for %s", dep.module)
+				log.Trace("Existing installation complete for %s", dep.Module)
 				return
 			}
 
-			log.Trace("Creating new installation lock for module %s", dep.module)
-			install_mutex[dep.module.cached] = new(sync.Mutex)
-			install_mutex[dep.module.cached].Lock()
+			log.Trace("Creating new installation lock for module %s", dep.Module)
+			install_mutex[dep.Module.Cached] = new(sync.Mutex)
+			install_mutex[dep.Module.Cached].Lock()
 
 			//log.Trace("%s:: Sending semaphore", dep.module)
 			//install_semaphore <- 1
 			install_lock.Unlock()
 
-			o, err := dep.module.Install()
+			o, err := dep.Module.Install()
 			//log.Trace("%s:: Waiting on semaphore", dep.module)
 			//<-install_semaphore
 			//log.Trace("%s:: Got semaphore", dep.module)
 
-			global_installed[dep.module.name+"-"+dep.module.version] = dep.module
-			global_installed[dep.module.cached] = dep.module
+			global_installed[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
+			global_installed[dep.Module.Cached] = dep.Module
 
 			n += o
 			if err != nil {
 				log.Error("Error installing module: %s", err)
 				errorLock.Lock()
-				errs = append(errs, dep.module.String())
+				errs = append(errs, dep.Module.String())
 				errorLock.Unlock()
 			}
 
-			install_mutex[dep.module.cached].Unlock()
+			install_mutex[dep.Module.Cached].Unlock()
 
 			n++
 		}(dep)
@@ -185,6 +185,8 @@ func (d *DependencyList) Resolve() error {
 		return nil
 	}
 
+	log.Debug("Resolving dependencies")
+
 	var wg sync.WaitGroup
 	semaphore := make(chan int, config.CPUs)
 	var errorLock sync.Mutex
@@ -199,9 +201,9 @@ func (d *DependencyList) Resolve() error {
 
 			semaphore <- 1
 
-			if gm, ok := global_modules[dep.name+"-"+dep.version]; ok {
+			if gm, ok := global_modules[dep.Name+"-"+dep.Version]; ok {
 				log.Trace("Dependency %s already resolved (S1): %s", dep, gm)
-				dep.module = gm
+				dep.Module = gm
 				<-semaphore
 				return
 			}
@@ -217,53 +219,53 @@ func (d *DependencyList) Resolve() error {
 				return
 			}
 
-			if gm, ok := global_modules[dep.module.name+"-"+dep.module.version+"~"+dep.module.source.URL]; ok {
-				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.module)
-				dep.module = gm
+			if gm, ok := global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL]; ok {
+				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.Module)
+				dep.Module = gm
 				<-semaphore
 				return
 			}
 
-			log.Debug("Downloading: %s", dep.module)
-			err = dep.module.Download()
+			log.Debug("Downloading: %s", dep.Module)
+			err = dep.Module.Download()
 			if err != nil {
-				log.Error("Error downloading module %s: %s", dep.module, err)
+				log.Error("Error downloading module %s: %s", dep.Module, err)
 				errorLock.Lock()
-				errs = append(errs, dep.module.String())
+				errs = append(errs, dep.Module.String())
 				errorLock.Unlock()
 				<-semaphore
 				return
 			}
 
-			if d.parent != nil {
-				if d.parent.IsCircular(dep.module) {
-					log.Error("Detected circular dependency %s from module %s", dep.module, d.parent)
+			if d.Parent != nil {
+				if d.Parent.IsCircular(dep.Module) {
+					log.Error("Detected circular dependency %s from module %s", dep.Module, d.Parent)
 					return
 				}
 			}
 
-			global_modules[dep.module.name+"-"+dep.module.version] = dep.module
-			global_modules[dep.module.name+"-"+dep.module.version+"~"+dep.module.source.URL] = dep.module
+			global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
+			global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
 
-			log.Debug("Resolving module dependencies: %s", dep.module)
-			dep.module.deps = &DependencyList{
-				parent:       dep.module,
+			log.Debug("Resolving module dependencies: %s", dep.Module)
+			dep.Module.Deps = &DependencyList{
+				Parent:       dep.Module,
 				Dependencies: make([]*Dependency, 0),
 			}
 
-			if dep.additional != nil && len(dep.additional) > 0 {
+			if dep.Additional != nil && len(dep.Additional) > 0 {
 				log.Trace("Adding cpanfile additional REQS")
-				for _, additional := range dep.additional {
+				for _, additional := range dep.Additional {
 					log.Trace("Adding additional dependency from cpanfile: %s", additional)
-					dep.module.deps.AddDependency(additional)
+					dep.Module.Deps.AddDependency(additional)
 				}
 			}
 
-			err = dep.module.loadDependencies()
+			err = dep.Module.loadDependencies()
 			if err != nil {
 				log.Error("Error resolving module dependencies: %s", err)
 				errorLock.Lock()
-				errs = append(errs, dep.module.String())
+				errs = append(errs, dep.Module.String())
 				errorLock.Unlock()
 				<-semaphore
 				return
@@ -298,7 +300,7 @@ func (v *Dependency) Resolve() error {
 		}
 		if m != nil {
 			log.Trace("=> Resolved dependency: %s", m)
-			v.module = m
+			v.Module = m
 			return nil
 		}
 	}
@@ -307,12 +309,12 @@ func (v *Dependency) Resolve() error {
 }
 
 func (v *Dependency) Matches(module *Module) bool {
-	dversion := v.version
+	dversion := v.Version
 	if strings.HasPrefix(dversion, "v") {
 		dversion = strings.TrimPrefix(dversion, "v")
 	}
 
-	mversion := module.version
+	mversion := module.Version
 	if strings.HasPrefix(mversion, "v") {
 		mversion = strings.TrimPrefix(mversion, "v")
 	}
@@ -321,7 +323,7 @@ func (v *Dependency) Matches(module *Module) bool {
 	mv, _ := strconv.ParseFloat(mversion, 64)
 
 	valid := false
-	switch v.modifier {
+	switch v.Modifier {
 	case "==":
 		log.Trace("Matches: %f == %f", mv, dv)
 		if mv == dv {
@@ -364,15 +366,21 @@ func DependencyFromString(name string, dependency string) (*Dependency, error) {
 		}
 
 		dep := &Dependency{
-			name:       name,
-			version:    matches[2],
-			modifier:   matches[1],
-			additional: make([]*Dependency, 0),
+			Name:       name,
+			Version:    matches[2],
+			Modifier:   matches[1],
+			Additional: make([]*Dependency, 0),
+		}
+		return dep, nil
+	} else {
+		dep := &Dependency{
+			Name:       name,
+			Version:    "0.00",
+			Modifier:   ">=",
+			Additional: make([]*Dependency, 0),
 		}
 		return dep, nil
 	}
-
-	return nil, errors.New(fmt.Sprintf("Unrecognised version string: %s", dependency))
 }
 
 func MkIndent(d int) string {
@@ -385,57 +393,57 @@ func MkIndent(d int) string {
 
 func (deps *DependencyList) PrintDeps(d int) {
 	for _, dep := range deps.Dependencies {
-		if dep.module == nil {
-			log.Info(MkIndent(0)+"%s not found", dep.name)
+		if dep.Module == nil {
+			log.Info(MkIndent(0)+"%s not found", dep.Name)
 			continue
 		}
-		dep.module.PrintDeps(d + 1)
+		dep.Module.PrintDeps(d + 1)
 	}
 }
 
 func (m *Module) PrintDeps(d int) {
-	log.Info(MkIndent(d)+"%s (%s): %s", m.name, m.version, m.cached)
-	if m.deps != nil {
-		m.deps.PrintDeps(d + 1)
+	log.Info(MkIndent(d)+"%s (%s): %s", m.Name, m.Version, m.Cached)
+	if m.Deps != nil {
+		m.Deps.PrintDeps(d + 1)
 	}
 }
 
 func (m *Module) Download() error {
-	m.dir = config.CacheDir + "/" + path.Dir(m.url)
-	p := strings.TrimSuffix(path.Base(m.url), ".tar.gz") // FIXME
-	m.extracted = m.dir + "/" + p
-	m.cached = config.CacheDir + "/" + m.url
+	m.Dir = config.CacheDir + "/" + path.Dir(m.Url)
+	p := strings.TrimSuffix(path.Base(m.Url), ".tar.gz") // FIXME
+	m.Extracted = m.Dir + "/" + p
+	m.Cached = config.CacheDir + "/" + m.Url
 
-	log.Trace("Downloading to: %s", m.dir)
-	log.Trace("Cached file: %s", m.cached)
-	log.Trace("Extracting to: %s", m.extracted)
+	log.Trace("Downloading to: %s", m.Dir)
+	log.Trace("Cached file: %s", m.Cached)
+	log.Trace("Extracting to: %s", m.Extracted)
 
-	log.Trace("Aquiring lock on download: %s", m.cached)
+	log.Trace("Aquiring lock on download: %s", m.Cached)
 	file_lock.Lock()
-	if mtx, ok := file_get[m.cached]; ok {
+	if mtx, ok := file_get[m.Cached]; ok {
 		file_lock.Unlock()
-		log.Trace("Waiting for existing download: %s", m.cached)
+		log.Trace("Waiting for existing download: %s", m.Cached)
 		mtx.Lock()
 		mtx.Unlock()
-		log.Trace("Existing download complete: %s", m.cached)
+		log.Trace("Existing download complete: %s", m.Cached)
 		return nil
 	} else {
 		log.Trace("Creating new lock")
-		file_get[m.cached] = new(sync.Mutex)
-		file_get[m.cached].Lock()
-		defer file_get[m.cached].Unlock()
+		file_get[m.Cached] = new(sync.Mutex)
+		file_get[m.Cached].Lock()
+		defer file_get[m.Cached].Unlock()
 		file_lock.Unlock()
-		log.Trace("Lock aquired: %s", m.cached)
+		log.Trace("Lock aquired: %s", m.Cached)
 	}
 
-	if _, err := os.Stat(m.cached); err != nil {
-		os.MkdirAll(m.dir, 0777)
-		out, err := os.Create(m.cached)
+	if _, err := os.Stat(m.Cached); err != nil {
+		os.MkdirAll(m.Dir, 0777)
+		out, err := os.Create(m.Cached)
 		if err != nil {
 			return err
 		}
 
-		url := m.source.URL + "/" + m.url
+		url := m.Source.URL + "/" + m.Url
 		log.Trace("Downloading: %s", url)
 		resp, err := http.Get(url)
 
@@ -448,7 +456,7 @@ func (m *Module) Download() error {
 			return err
 		}
 
-		c := exec.Command("tar", "-zxf", m.cached, "-C", m.dir)
+		c := exec.Command("tar", "-zxf", m.Cached, "-C", m.Dir)
 
 		var stdout2 bytes.Buffer
 		var stderr2 bytes.Buffer
@@ -457,31 +465,31 @@ func (m *Module) Download() error {
 		c.Stdout = &stdout2
 
 		if err := c.Start(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s (%s): %s", m.name, m.version, err)
+			errstr := fmt.Sprintf("Error extracting %s (%s): %s", m.Name, m.Version, err)
 			return errors.New(errstr)
 		}
 
 		if err := c.Wait(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.name, m.version, err, stderr2.String(), stdout2.String())
+			errstr := fmt.Sprintf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr2.String(), stdout2.String())
 			return errors.New(errstr)
 		}
 
 		out.Close()
 		resp.Body.Close()
 
-		log.Trace("File extracted to: %s", m.extracted)
+		log.Trace("File extracted to: %s", m.Extracted)
 	} else {
-		log.Trace("File already cached: %s", m.cached)
+		log.Trace("File already cached: %s", m.Cached)
 	}
 
 	return nil
 }
 
 func (m *Module) loadDependencies() error {
-	yml, err := ioutil.ReadFile(m.extracted + "/META.yml")
+	yml, err := ioutil.ReadFile(m.Extracted + "/META.yml")
 	if err != nil {
 		// TODO this isnt an error (it shouldnt make build fail)
-		log.Error("Error opening META.yml for %s: %s", m.name, err)
+		log.Error("Error opening META.yml for %s: %s", m.Name, err)
 		// return nil to prevent build fail
 		return nil
 	}
@@ -496,7 +504,7 @@ func (m *Module) loadDependencies() error {
 	}
 
 	if reqs, ok := meta["requires"]; ok {
-		log.Debug("Found dependencies for module %s", m.name)
+		log.Debug("Found dependencies for module %s", m.Name)
 		switch reqs.(type) {
 		case map[interface{}]interface{}:
 			for req, ver := range reqs.(map[interface{}]interface{}) {
@@ -513,16 +521,16 @@ func (m *Module) loadDependencies() error {
 					log.Error("Error parsing dependency: %s", err)
 					continue
 				}
-				if _, ok := perl_core[dep.name]; ok {
-					log.Trace("Module is from perl core: %s", dep.name)
+				if _, ok := perl_core[dep.Name]; ok {
+					log.Trace("Module is from perl core: %s", dep.Name)
 					continue
 				}
-				m.deps.AddDependency(dep)
+				m.Deps.AddDependency(dep)
 			}
 		}
 
 		log.Debug("Resolving module dependency list")
-		err := m.deps.Resolve()
+		err := m.Deps.Resolve()
 		if err != nil {
 			log.Error("Error resolving dependency list: %s", err)
 			return err
@@ -531,18 +539,18 @@ func (m *Module) loadDependencies() error {
 		return nil
 	}
 
-	log.Debug("No dependencies for module %s", m.name)
+	log.Debug("No dependencies for module %s", m.Name)
 	return nil
 }
 
 func (m *Module) getCmd() *exec.Cmd {
 	var c *exec.Cmd
-	if _, ok := config.NoTest.Modules[m.name]; ok || config.NoTest.Global {
-		log.Trace("Executing cpanm install with --notest flag for %s", m.cached)
-		c = exec.Command("cpanm", "--notest", "-l", "./local", m.cached)
+	if _, ok := config.NoTest.Modules[m.Name]; ok || config.NoTest.Global {
+		log.Trace("Executing cpanm install with --notest flag for %s", m.Cached)
+		c = exec.Command("cpanm", "--notest", "-l", "./local", m.Cached)
 	} else {
-		log.Trace("Executing cpanm install for %s", m.cached)
-		c = exec.Command("cpanm", "-l", "./local", m.cached)
+		log.Trace("Executing cpanm install for %s", m.Cached)
+		c = exec.Command("cpanm", "-l", "./local", m.Cached)
 	}
 	return c
 }
@@ -552,9 +560,9 @@ func (m *Module) Install() (int, error) {
 
 	n := 0
 
-	if m.deps != nil {
+	if m.Deps != nil {
 		log.Trace("Installing module dependencies for %s", m)
-		o, err := m.deps.Install()
+		o, err := m.Deps.Install()
 		n += o
 		if err != nil {
 			log.Error("Error installing module dependencies for %s: %s", m, err)
@@ -592,22 +600,22 @@ func (m *Module) Install() (int, error) {
 	if err := c.Wait(); err != nil {
 		if !strings.HasPrefix(strings.ToLower(stderr.String()), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(stderr.String()), "text file busy") &&
 			!strings.HasPrefix(strings.ToLower(stdout.String()), "plenv: cannot rehash:") && !strings.Contains(strings.ToLower(stdout.String()), "text file busy") {
-			log.Error(m.name + "-" + m.version + " failed to install")
-			log.Error("Error installing %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.name, m.version, err, stderr.String(), stdout.String())
+			log.Error(m.Name + "-" + m.Version + " failed to install")
+			log.Error("Error installing %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr.String(), stdout.String())
 			return n, err
 		}
 	}
 
 	n++
 
-	log.Printf("Installed " + m.name + " (" + m.version + ")")
+	log.Printf("Installed " + m.Name + " (" + m.Version + ")")
 	return n, nil
 }
 
 func flattenForMod(m *Module) string {
-	s := m.url
-	if m.formod != nil {
-		s = flattenForMod(m.formod) + "->" + s
+	s := m.Url
+	if m.Formod != nil {
+		s = flattenForMod(m.Formod) + "->" + s
 	}
 	return s
 }

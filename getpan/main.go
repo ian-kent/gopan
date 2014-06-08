@@ -2,12 +2,13 @@ package main
 
 import (
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/getpan/getpan"
 )
 
-var config *Config
+var config *getpan.Config
 
 func main() {
-	config = Configure()
+	config = getpan.Configure()
 	config.Dump()
 
 	for _, source := range config.Sources {
@@ -18,7 +19,7 @@ func main() {
 		}
 	}
 
-	deps, err := ParseCPANFile(config.CPANFile)
+	deps, err := getpan.ParseCPANFile(config.CPANFile)
 	if err != nil {
 		log.Error("Error parsing cpanfile: %s", err)
 		return

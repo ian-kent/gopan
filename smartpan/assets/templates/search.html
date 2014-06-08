@@ -1,0 +1,53 @@
+<style>
+	.search-header h1 {
+		margin-top: 70px;
+		color: #aaa;
+		margin-bottom: 50px;
+		font-size: 5em;
+	}
+	.path {
+		color: #aaa;
+		font-size: 0.9em;
+	}
+	.results ul {
+		list-style-type: none;
+		padding-left: 15px;
+	}
+	.results ul li {
+		margin-bottom: 3px;
+	}
+</style>
+{{ if not .Query }}
+<div class="text-center search-header">
+	<h1>SmartPAN</h1>
+</div>
+{{ end }}
+
+<div class="text-center">
+	<form role="form" action="" method="get">
+	  <div class="form-group">
+	    <label for="search" class="hidden">Search</label>
+	    <input type="text" class="form-control input-lg" id="search" placeholder="Search" {{ if .Query }}value="{{ .Query }}"{{ end }} autofocus name="q">
+	  </div>
+	  <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search SmartPAN</button>
+	</form>
+</div>
+
+{{ if .Query }}
+	{{ if .Results }}
+	<div class="results">
+		<p>About {{ len .Results }} results</p>
+		<ul>
+		{{ range .Results }}
+			<li>
+				<a href="/browse/{{ .URL }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a>
+				<br />
+				<span class="path">{{ .URL }}</span>
+			</li>
+		{{ end }}
+		</ul>
+	</div>
+	{{ else }}
+		<p>No results</p>
+	{{ end }}
+{{ end }}

@@ -1,4 +1,4 @@
-package main
+package getpan
 
 var perl_core = map[string]int{
 	"AnyDBM_File":                     1,

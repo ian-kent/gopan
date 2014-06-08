@@ -1,0 +1,67 @@
+<h1>Import CPAN module</h1>
+<hr>
+
+<form role="form" method="post" action="" enctype="multipart/form-data">
+	{{ if .fh.HasErrors }}
+	<p style="border: 1px solid #f00; color: #f00">
+		<strong>Error</strong>
+	</p>
+	{{ end }}
+
+	<div>
+		<h3>Import into</h3>
+		{{ range .fh.Errors.ImportInto }}
+			<p style="color: #f00">{{ . }}</p>
+		{{ end }}
+		<div class="list-group">
+		{{ range .indexes }}
+			<label class="list-group-item"><input type="radio" name="importinto" value="{{ .Name }}" style="margin-right: 10px">{{ .Name }}</label>
+		{{ end }}
+			<label class="list-group-item"><input type="radio" name="importinto" value="new_index" style="margin-right: 10px">New index: 
+			{{ range .fh.Errors.NewIndex }}
+				<p style="color: #f00">{{ . }}</p>
+			{{ end }}
+			<input type="text" class="form-control" name="newindex" placeholder="e.g. DarkPAN" value="{{ .fh.Model.NewIndex }}" style="margin-top: 5px"></label>
+		</div>
+	</div>
+
+	<div class="row" style="margin-bottom: 15px">
+		<div class="col-md-6">
+			<h4>CPAN mirror</h4>
+			<input type="text" class="form-control" name="cpanmirror" placeholder="e.g. http://some.mirror" value="{{ .fh.Model.CPANMirror }}">
+
+			<h3>Paste a cpanfile</h3>
+			{{ range .fh.Errors.Cpanfile }}
+				<p style="color: #f00">{{ . }}</p>
+			{{ end }}
+			<textarea name="cpanfile" class="form-control" rows="10">{{ .fh.Model.Cpanfile }}</textarea>
+		</div>
+		<div class="col-md-6">
+			<h4>Author ID</h4>
+			<input type="text" class="form-control" name="authorid" value="{{ .fh.Model.AuthorID }}">
+
+			<h3>Import from URL</h3>
+			{{ range .fh.Errors.ImportURL }}
+				<p style="color: #f00">{{ . }}</p>
+			{{ end }}
+			<input name="importurl" type="text" class="form-control" value="{{ .fh.Model.ImportURL }}" placeholder="http://path.to/Your-Module-0.01.tar.gz">
+
+			<h3>Import from local directory</h3>
+			{{ range .fh.Errors.FromDir }}
+				<p style="color: #f00">{{ . }}</p>
+			{{ end }}
+			<input name="fromdir" type="text" class="form-control" value="{{ .fh.Model.FromDir }}" placeholder="/home/user/cpan/Your-Module-0.01.tar.gz">
+
+			<h3>Upload a module or cpanfile</h3>
+			{{ range .fh.Errors.FromFile }}
+				<p style="color: #f00">{{ . }}</p>
+			{{ end }}
+			<input name="fromfile" type="file" value="{{ .fh.Model.FromFile }}" class="form-control">
+		</div>
+	</div>
+
+	<div class="text-center">
+		<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-play-circle"></span> Begin import</button>
+	</div>
+
+</form>

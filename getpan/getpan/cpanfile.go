@@ -1,4 +1,4 @@
-package main
+package getpan
 
 import (
 	"github.com/ian-kent/go-log/log"
@@ -25,8 +25,8 @@ func ParseCPANLine(line string) (*Dependency, error) {
 	}
 
 	module := matches[1]
-	version := matches[2]
-	comment := matches[3]
+	version := matches[3]
+	comment := matches[4]
 
 	dependency, err := DependencyFromString(module, version)
 
@@ -42,7 +42,7 @@ func ParseCPANLine(line string) (*Dependency, error) {
 				continue
 			}
 			log.Trace("Added dependency: %s", new_dep)
-			dependency.additional = append(dependency.additional, new_dep)
+			dependency.Additional = append(dependency.Additional, new_dep)
 		}
 	}
 
@@ -50,20 +50,24 @@ func ParseCPANLine(line string) (*Dependency, error) {
 		return nil, err
 	}
 
-	log.Info("%s (%s %s)", module, dependency.modifier, dependency.version)
+	log.Info("%s (%s %s)", module, dependency.Modifier, dependency.Version)
 
 	return dependency, err
 }
 
 func ParseCPANFile(file string) (*CPANFile, error) {
-	cpanfile := &CPANFile{}
-
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
 	lines := strings.Split(string(bytes), "\n")
+
+	return ParseCPANLines(lines)
+}
+
+func ParseCPANLines(lines []string) (*CPANFile, error) {
+	cpanfile := &CPANFile{}
 
 	for _, l := range lines {
 		if len(l) == 0 {
@@ -89,5 +93,5 @@ func ParseCPANFile(file string) (*CPANFile, error) {
 
 	log.Info("Found %d dependencies in cpanfile", len(cpanfile.Dependencies))
 
-	return cpanfile, nil
+	return cpanfile, nil	
 }

@@ -1,13 +1,16 @@
-package main
+package getpan
 
 import (
 	"flag"
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/gopan"
 	"os"
 	"runtime"
 	"strconv"
 )
+
+var config *Config
 
 type NoTestConfig struct {
 	Global  bool
@@ -56,7 +59,7 @@ func DefaultSources() []*Source {
 }
 
 func DefaultConfig() *Config {
-	return &Config{
+	config = &Config{
 		Sources: DefaultSources(),
 		NoTest: &NoTestConfig{
 			Global:  false,
@@ -67,19 +70,20 @@ func DefaultConfig() *Config {
 		CPUs:      runtime.NumCPU(),
 		CacheDir:  ".gopancache",
 	}
+	return config
 }
 
 func Configure() *Config {
 	conf := DefaultConfig()
 
 	cpan := make([]string, 0)
-	flag.Var((*AppendSliceValue)(&cpan), "cpan", "A CPAN mirror (can be specified multiple times)")
+	flag.Var((*gopan.AppendSliceValue)(&cpan), "cpan", "A CPAN mirror (can be specified multiple times)")
 
 	backpan := make([]string, 0)
-	flag.Var((*AppendSliceValue)(&backpan), "backpan", "A BackPAN mirror (can be specified multiple times)")
+	flag.Var((*gopan.AppendSliceValue)(&backpan), "backpan", "A BackPAN mirror (can be specified multiple times)")
 
 	notest := make([]string, 0)
-	flag.Var((*AppendSliceValue)(&notest), "notest", "A module to install without testing (can be specified multiple times)")
+	flag.Var((*gopan.AppendSliceValue)(&notest), "notest", "A module to install without testing (can be specified multiple times)")
 
 	nevertest := false
 	flag.BoolVar(&nevertest, "nevertest", false, "Disables all tests during installation phase")
@@ -136,6 +140,8 @@ func Configure() *Config {
 
 	// create cache dir
 	os.MkdirAll(conf.CacheDir, 0777)
+
+	config = conf
 
 	return conf
 }

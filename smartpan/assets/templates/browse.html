@@ -1,0 +1,59 @@
+<style>
+	.pathpart:not(:last-child):after {
+		content: "/";
+		margin-right: 10px;
+		margin-left: 10px;
+	}
+	.path {
+		color: #aaa;
+		font-size: 0.9em;
+	}
+	.package {
+		margin-bottom: 0.5em;
+		padding: 15px;
+	}
+	.package th {
+		vertical-align: top;
+		padding-right: 10px;
+	}
+	.dirlist ul {
+		list-style-type: none;
+		padding-left: 15px;
+	}
+	.dirlist ul li {
+		margin-bottom: 3px;
+	}
+</style>
+<h1>{{ range .PathBits }}<span class="pathpart"><a href="/browse{{ .Path }}">{{ .Name }}</a></span>{{ end }}</h1>
+
+{{ if .Package }}
+<div class="package">
+	<table>
+		<tr>
+			<th>Package</th>
+			<td>{{ .Package.FullName }}</td>
+		</tr>
+		{{ if .Package.Packages }}
+		<tr>
+			<th>Provided by</th>
+			<td>
+				{{ range .Package.Packages }}
+					<div class="module"><a href="/browse/{{ .VirtualURL }}"><span class="glyphicon glyphicon-compressed"></span> {{ .VirtualURL }}</a></div>
+				{{ end }}
+			</td>
+		</tr>
+		{{ end }}
+	</table>
+</div>
+{{ end }}
+
+<div class="dirlist">
+	<ul>
+		{{ range .Dirs }}
+		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-folder-close"></span> {{ .Name }}</a></li>
+		{{ end }}
+		{{ range .Files }}
+		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-compressed"></span> {{ .Name }}</a></li>
+		{{ end }}
+	</ul>
+</div>
