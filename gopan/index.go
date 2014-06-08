@@ -26,7 +26,7 @@ func CountIndex(indexes map[string]*Source) (int, int, int, int) {
 }
 
 func AppendToIndex(index string, source *Source, author *Author, pkg *Package) {
-	os.MkdirAll(".gopancache", 0770)
+	os.MkdirAll(".gopancache", 0777)
 	out, err := os.OpenFile(index, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		log.Error("Error opening index: %s", err.Error())

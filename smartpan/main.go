@@ -6,6 +6,7 @@ import (
 	"github.com/ian-kent/gotcha/http"
 	"github.com/ian-kent/gotcha/form"
 	"github.com/ian-kent/gopan/gopan"
+	"github.com/ian-kent/gopan/pandex/pandex"
 	"github.com/ian-kent/gopan/getpan/getpan"
 	"github.com/ian-kent/go-log/log"
 	"html/template"
@@ -255,7 +256,7 @@ func search(session *http.Session) {
 									results = append(results, &SearchResult{
 										Name: prov.Name,
 										Type: "Package",
-										URL: idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name + "/" + prov.Name,
+										URL: idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
 										Obj: prov,
 										Glyph: "briefcase",
 									})
@@ -601,10 +602,12 @@ func browse(session *http.Session) {
 				if repo == "SmartPAN" {
 					rbits := bits[1:]
 					ctx := packages[bits[0]]
+					log.Info("Starting with context: %s", ctx.Namespace)
 					for len(rbits) > 0 {
 						ctx = ctx.Children[rbits[0]]
 						rbits = rbits[1:]
 					}
+					log.Info("Stashing package context: %s", ctx.Namespace)
 					session.Stash["Package"] = ctx
 					for ns, _ := range ctx.Children {
 						files[ns] = map[string]string{
@@ -615,11 +618,13 @@ func browse(session *http.Session) {
 				} else {
 					rbits := bits[1:]
 					ctx := idxpackages[repo][bits[0]]
+					log.Info("Starting with context: %s", ctx.Namespace)
 					for len(rbits) > 0 {
 						ctx = ctx.Children[rbits[0]]
 						rbits = rbits[1:]
 					}
 					session.Stash["Package"] = ctx
+					log.Info("Stashing package context: %s", ctx.Namespace)
 					for ns, _ := range ctx.Children {
 						files[ns] = map[string]string{
 							"Name": ns,
@@ -981,7 +986,7 @@ func do_import(session *http.Session, job *ImportJob) {
 		if _, err := os.Stat(npath); err == nil {
 			msg(" | Already exists in repository")
 		} else {
-			os.MkdirAll(ndir, 0770)
+			os.MkdirAll(ndir, 0777)
 
 			msg(" | Copying to " + npath)
 			_, err := CopyFile(npath, m.Cached)
@@ -1030,11 +1035,46 @@ func do_import(session *http.Session, job *ImportJob) {
 					Provides: make(map[string]*gopan.PerlPackage),
 			}
 
+			msg(" | Getting list of packages")
+			modnm := strings.TrimSuffix(fn, ".tar.gz")
+			pkg := indexes[reponame].Authors[auth].Packages[fn]
+			pandex.Provides(pkg, npath, ndir + "/" + modnm, ndir)
+
+			//pkg := indexes[reponame].Authors[auth].Packages[fn]
+			msg(" | Adding packages to index")
+			if _, ok := idxpackages[reponame]; !ok {
+				idxpackages[reponame] = make(map[string]*PkgSpace)
+			}
+			for _, prov := range pkg.Provides {
+				parts := strings.Split(prov.Name, "::")
+				if _, ok := packages[parts[0]]; !ok {
+					packages[parts[0]] = &PkgSpace{
+						Namespace: parts[0],
+						Packages: make([]*gopan.PerlPackage, 0),
+						Children: make(map[string]*PkgSpace),
+						Parent: nil,
+					}
+				}
+				if _, ok := idxpackages[reponame][parts[0]]; !ok {
+					idxpackages[reponame][parts[0]] = &PkgSpace{
+						Namespace: parts[0],
+						Packages: make([]*gopan.PerlPackage, 0),
+						Children: make(map[string]*PkgSpace),
+						Parent: nil,
+					}
+				}
+				if len(parts) == 1 {
+					packages[parts[0]].Packages = append(packages[parts[0]].Packages, prov)
+					idxpackages[reponame][parts[0]].Packages = append(idxpackages[reponame][parts[0]].Packages, prov)
+				} else {
+					packages[parts[0]].Populate(parts[1:], prov)
+					idxpackages[reponame][parts[0]].Populate(parts[1:], prov)
+				}
+			}
+
 			msg(" | Writing to index file")
 			gopan.AppendToIndex(config.CacheDir + "/" + config.Index, indexes[reponame], indexes[reponame].Authors[auth], indexes[reponame].Authors[auth].Packages[fn])
 		}
-
-		// TODO update provides once pandex finally finished indexing stuff
 
 		msg(" | Imported module")
 	}

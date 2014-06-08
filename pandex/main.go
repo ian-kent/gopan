@@ -3,12 +3,10 @@ package main
 import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
+	"github.com/ian-kent/gopan/pandex/pandex"
 	"sync"
-	"os/exec"
-	"bytes"
-	"strings"
 	"os"
-	"encoding/json"
+	"strings"
 )
 
 var wg = new(sync.WaitGroup)
@@ -24,7 +22,7 @@ func main() {
 	log.Info("Using log level: %s", config.LogLevel)
 
 	// FIXME inefficient
-	_, _, tpkg := gopan.CountIndex(indexes)
+	_, _, tpkg, _ := gopan.CountIndex(indexes)
 
 	npkg := 0
 	nmod := 0
@@ -42,9 +40,9 @@ func main() {
 				go func(idx *gopan.Source, auth *gopan.Author, pkg *gopan.Package) {
 					defer wg.Done()
 
-					sem <- 1
-
 					log.Debug("Package: %s", pkg)
+
+					sem <- 1
 
 					// TODO better handling of filenames
 					modnm := strings.TrimSuffix(pkg.Name, ".tar.gz")
@@ -53,7 +51,6 @@ func main() {
 
 					if _, err := os.Stat(tgzpath); err != nil {
 						log.Error("File not found: %s", tgzpath)
-						<-sem
 						return;
 					}
 
@@ -64,84 +61,7 @@ func main() {
 					log.Trace(" > extpath: %s", extpath)
 					log.Trace(" > dirpath: %s", dirpath)
 
-					// not required? path should already exist
-					os.MkdirAll(dirpath, 0770)
-
-					var stdout1 bytes.Buffer
-					var stderr1 bytes.Buffer
-
-					extract := exec.Command("tar", "-zxf", tgzpath, "-C", dirpath)
-					extract.Stdout = &stdout1				
-					extract.Stderr = &stderr1
-
-					if err := extract.Run(); err != nil {
-						log.Error("Extract run: %s", err.Error())
-						log.Trace(stdout1.String())
-						log.Error(stderr1.String())
-						<-sem
-						return;
-					}
-
-					log.Trace(stdout1.String())
-					log.Trace(stderr1.String())
-
-					defer func() {
-						var stdout3 bytes.Buffer
-						var stderr3 bytes.Buffer
-
-						clean := exec.Command("rm", "-rf", extpath)
-						clean.Stdout = &stdout3			
-						clean.Stderr = &stderr3
-
-						if err := clean.Run(); err != nil {
-							log.Error("Clean run: %s", err.Error())
-						}
-
-						log.Trace(stdout3.String())
-						log.Trace(stderr3.String())
-					}()
-
-					//var stdout2 bytes.Buffer
-					var stderr2 bytes.Buffer
-
-					cmd := exec.Command("perl", "-MModule::Metadata", "-MJSON::XS", "-e", "print encode_json(Module::Metadata->provides(version => 2, prefix => \"\", dir => $ARGV[0]))", extpath)
-					//cmd.Stdout = &stdout2				
-					cmd.Stderr = &stderr2
-
-					stdout, err := cmd.StdoutPipe()
-					defer stdout.Close()
-					if err != nil {
-						log.Error("StdoutPipe: %s", err.Error())
-						<-sem
-						return;
-					}
-
-					if err := cmd.Start(); err != nil {
-						log.Error("Start: %s", err.Error())
-						<-sem
-						return;
-					}
-
-					if err := json.NewDecoder(stdout).Decode(&pkg.Provides); err != nil {
-						log.Error("JSON decoder error: %s", err.Error())
-						<-sem
-						return;
-					}
-
-					if err := cmd.Wait(); err != nil {
-						log.Error("Wait: %s", err.Error())
-						<-sem
-						return;
-					}
-
-					//log.Trace(stdout2.String())
-					log.Trace(stderr2.String())
-
-					for p, pk := range pkg.Provides {
-						log.Trace("%s: %s %s", p, pk.Version, pk.File)
-					}
-
-					log.Debug("%s provides %d packages", pkg, len(pkg.Provides))
+					pandex.Provides(pkg, tgzpath, extpath, dirpath)
 
 					npkg += len(pkg.Provides)
 					nmod += 1

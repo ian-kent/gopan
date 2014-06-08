@@ -38,7 +38,7 @@
 			<th>Provided by</th>
 			<td>
 				{{ range .Package.Packages }}
-					<div class="module"><a href="/browse/{{ .VirtualURL }}"><span class="glyphicon glyphicon-compressed"></span> {{ .VirtualURL }}</a></div>
+					<div class="module"><a href="/browse/{{ .Package.VirtualURL }}"><span class="glyphicon glyphicon-compressed"></span> {{ .Package.VirtualURL }}</a></div>
 				{{ end }}
 			</td>
 		</tr>

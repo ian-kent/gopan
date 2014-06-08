@@ -222,30 +222,28 @@ func (d *DependencyList) Resolve() error {
 			if gm, ok := global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL]; ok {
 				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.Module)
 				dep.Module = gm
-				<-semaphore
-				return
-			}
-
-			log.Debug("Downloading: %s", dep.Module)
-			err = dep.Module.Download()
-			if err != nil {
-				log.Error("Error downloading module %s: %s", dep.Module, err)
-				errorLock.Lock()
-				errs = append(errs, dep.Module.String())
-				errorLock.Unlock()
-				<-semaphore
-				return
-			}
-
-			if d.Parent != nil {
-				if d.Parent.IsCircular(dep.Module) {
-					log.Error("Detected circular dependency %s from module %s", dep.Module, d.Parent)
+			} else {
+				log.Debug("Downloading: %s", dep.Module)
+				err = dep.Module.Download()
+				if err != nil {
+					log.Error("Error downloading module %s: %s", dep.Module, err)
+					errorLock.Lock()
+					errs = append(errs, dep.Module.String())
+					errorLock.Unlock()
+					<-semaphore
 					return
 				}
-			}
 
-			global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
-			global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
+				if d.Parent != nil {
+					if d.Parent.IsCircular(dep.Module) {
+						log.Error("Detected circular dependency %s from module %s", dep.Module, d.Parent)
+						return
+					}
+				}
+
+				global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
+				global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
+			}
 
 			log.Debug("Resolving module dependencies: %s", dep.Module)
 			dep.Module.Deps = &DependencyList{
