@@ -1007,7 +1007,8 @@ func do_import(session *http.Session, job *ImportJob) {
 			mods = append(mods, m)
 		}
 	} else {
-		msg("Error importing file upload: " + err.Error())
+		// there is no file... so no error
+		//msg("Error importing file upload: " + err.Error())
 	}
 
 	if len(mods) == 0 {

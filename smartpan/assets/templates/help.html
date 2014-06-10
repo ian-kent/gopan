@@ -22,7 +22,7 @@
 
 <p>Pass the SmartPAN mirror with the <code>-smart</code> command line parameter:</p>
 
-<pre>getpan -smart http://path.to/smartpan</pre>
+<pre>getpan -smart http://path.to/SmartPAN</pre>
 
 <p>This should allow getpan to locate any version of any module from
 any of the available indexes.</p>
@@ -42,6 +42,6 @@ typically find different module versions.</p>
 in any of the other indexes. Using the SmartPAN URL should consistently find
 the latest module version.</p>
 
-<pre>cpanm --mirror http://your.smartpan/repo/SmartPAN Some::Module
-cpanm --mirror http://your.smartpan/repo/SmartPAN --install-deps .
-PERL_CARTON_MIRROR=http://your.smartpan/repo/SmartPAN carton install</pre>
+<pre>cpanm --mirror http://your.smartpan/SmartPAN Some::Module
+cpanm --mirror http://your.smartpan/SmartPAN --install-deps .
+PERL_CARTON_MIRROR=http://your.smartpan/SmartPAN carton install</pre>

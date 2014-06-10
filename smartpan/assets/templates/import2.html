@@ -2,9 +2,9 @@
 <hr>
 
 {{ if .Job }}
-	<table class="table">
+	<table class="table table-condensed">
 		<tr>
-			<th>Import into</th>
+			<th style="width: 10em;">Import into</th> <!-- FIXME -->
 			<td style="width: auto">{{ .Job.Form.ImportInto }}</td>
 		</tr>
 		<tr>
@@ -23,5 +23,7 @@
 
 	<iframe style="height: 500px" class="form-control" src="/import/{{.jobid}}/stream"></iframe>
 {{ else }}
-	<p class="text-danger">Job {{ .jobid }} not found</p>
+	<div class="alert alert-danger">
+		Job {{ .jobid }} not found
+	</div>
 {{ end }}
