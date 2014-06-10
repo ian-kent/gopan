@@ -28,11 +28,20 @@ import (
     "strconv"
 )
 
+// GoPAN indexes - CPAN, BackPAN etc
 var indexes map[string]*gopan.Source
+
+// Maps authors by id (A -> AB -> ABC)
 var mapped = make(map[string]map[string]map[string]map[string]*gopan.Author)
+
+// Maps package names (e.g. Mojolicious, Mojolicious::Command etc)
 var packages = make(map[string]*PkgSpace)
 var idxpackages = make(map[string]map[string]*PkgSpace)
 
+// Maps SmartPAN virtual URLs (a/ab/abc/package.tar.gz) to indexes (BackPAN/CPAN)
+var filemap = make(map[string]string)
+
+// Represents a partial namespace (e.g. 'Mojolicious' and 'Mojolicious'->'Command' for Mojolicious::Command)
 type PkgSpace struct {
 	Namespace string
 	Packages []*gopan.PerlPackage
@@ -40,6 +49,7 @@ type PkgSpace struct {
 	Parent   *PkgSpace
 }
 
+// Returns the full package name
 func (p *PkgSpace) FullName() string {
 	s := ""
 	if p.Parent != nil {
@@ -49,15 +59,19 @@ func (p *PkgSpace) FullName() string {
 	return s
 }
 
+// Returns the latest version available from any source
+// TODO list all versions
 func (p *PkgSpace) Version() float64 {
-	// FIXME find latest
 	if len(p.Packages) == 0 {
 		return 0
 	}
 
+	// FIXME find latest
 	return p.Packages[0].Package.Version()
 }
 
+// Populates a package namespace, e.g. constructing each part of the namespace
+// when passed []string{'Mojolicious','Plugin','PODRenderer'}
 func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 	if len(parts) > 0 {
 		if _, ok := p.Children[parts[0]]; !ok {
@@ -88,7 +102,7 @@ func main() {
 	configure()
 
 	indexes = gopan.LoadIndex(config.CacheDir + "/" + config.Index)
-	for _, idx := range indexes {
+	for idn, idx := range indexes {
 		mapped[idx.Name] = make(map[string]map[string]map[string]*gopan.Author)
 		for _, auth := range idx.Authors {
 			if _, ok := mapped[idx.Name][auth.Name[:1]]; !ok {
@@ -100,6 +114,7 @@ func main() {
 			mapped[idx.Name][auth.Name[:1]][auth.Name[:2]][auth.Name] = auth
 
 			for _, pkg := range auth.Packages {
+				filemap[pkg.AuthorURL()] = idn
 				for _, prov := range pkg.Provides {
 					parts := strings.Split(prov.Name, "::")
 					if _, ok := packages[parts[0]]; !ok {
@@ -522,6 +537,17 @@ func download(session *http.Session) {
 
 	repo := session.Stash["repo"].(string)
 	file := session.Stash["file"].(string)
+
+	if repo == "SmartPAN" {
+		if _, ok := filemap[file]; !ok {
+			log.Debug("SmartPAN repo - file [%s] not found in any index", file)
+			session.RenderNotFound()
+			return
+		}
+
+		repo = filemap[file]
+		log.Debug("SmartPAN repo - file [%s] found in [%s]", file, repo)
+	}
 
 	log.Debug("Repo [%s], file [%s]", repo, file)
 
