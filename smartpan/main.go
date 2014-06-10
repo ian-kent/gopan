@@ -1088,6 +1088,10 @@ func do_import(session *http.Session, job *ImportJob) {
 		msg(" | Imported module")
 	}
 
+	nsrc, nauth, npkg, nprov := gopan.CountIndex(indexes)
+	// TODO should probably be in the index - needs to udpate when index changes
+	summary = &Summary{nsrc, nauth, npkg, nprov}
+
 	msg(":DONE")
 	job.Complete = true
 }
