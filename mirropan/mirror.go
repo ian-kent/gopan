@@ -12,7 +12,7 @@ func mirrorPan() {
 	log.Info("Mirroring *PAN")
 
 	// FIXME inefficient
-	_, _, npkg := gopan.CountIndex(indexes)
+	_, _, npkg, _ := gopan.CountIndex(indexes)
 
 	mirrored := 0
 	var pc = func() int {

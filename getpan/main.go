@@ -39,12 +39,13 @@ func main() {
 		return
 	}
 
-	n, err := deps.Install()
+	_, err = deps.Install()
 
 	if err != nil {
 		log.Error("Error installing dependencies: %s", err)
 		return
 	}
 
-	log.Info("Successfully installed %d modules", n)
+	// FIXME hacky, need a better way of tracking installed deps
+	log.Info("Successfully installed %d modules", deps.UniqueInstalled())
 }

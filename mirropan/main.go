@@ -86,8 +86,8 @@ func main() {
 		}
 	}
 
-	nsrc, nauth, npkg := gopan.CountIndex(indexes)
-	log.Info("Found %d packages by %d authors from %d sources", npkg, nauth, nsrc)
+	nsrc, nauth, nmod, npkg := gopan.CountIndex(indexes)
+	log.Info("Found %d packages in %d modules by %d authors from %d sources", npkg, nmod, nauth, nsrc)
 
 	if !config.NoMirror {
 		mirrorPan()

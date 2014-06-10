@@ -90,23 +90,28 @@ func (s *Source) Load() error {
 }
 
 func (s *Source) loadCPANSource() error {
-	log.Trace("Loading CPAN index: %s", s.Index)
+	log.Info("Loading CPAN index: %s", s.Index)
 
 	res, err := http.Get(s.Index)
 	if err != nil {
 		log.Warn(err)
+		return nil
 	}
 
 	// TODO optional gzip
 	r, err := gzip.NewReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err.Error())
+		b, _ := ioutil.ReadAll(res.Body)
+		log.Info("%s", string(b))
+		return nil
 	}
 
 	packages, err := ioutil.ReadAll(r)
 	res.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Warn(err)
+		return nil
 	}
 
 	foundnl := false
@@ -127,7 +132,7 @@ func (s *Source) loadCPANSource() error {
 }
 
 func (s *Source) loadBackPANSource() error {
-	log.Printf("Loading BackPAN index: backpan-index")
+	log.Info("Loading BackPAN index: backpan-index")
 
 	file, err := os.Open("backpan-index")
 	if err != nil {

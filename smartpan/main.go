@@ -501,7 +501,11 @@ func pkgindex(session *http.Session) {
 
 	if g, ok := session.Stash["gz"]; ok {
 		if len(g.(string)) > 0 {
+			// cheat and hijack gotchas gzip support
+			session.Response.Headers.Set("Content-Type", "application/gzip")
+			session.Response.Send()
 			session.Response.Gzip()
+			session.Response.Headers.Remove("Content-Encoding")
 			log.Debug("Using gzip")
 		}
 	}
@@ -1080,6 +1084,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			if _, ok := idxpackages[reponame]; !ok {
 				idxpackages[reponame] = make(map[string]*PkgSpace)
 			}
+			filemap[pkg.AuthorURL()] = reponame
 			for _, prov := range pkg.Provides {
 				parts := strings.Split(prov.Name, "::")
 				if _, ok := packages[parts[0]]; !ok {

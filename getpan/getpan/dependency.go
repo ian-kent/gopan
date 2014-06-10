@@ -26,6 +26,7 @@ type DependencyList struct {
 
 var global_modules = make(map[string]*Module)
 var global_installed = make(map[string]*Module)
+var global_unique = make(map[string]int)
 var versionRe = regexp.MustCompile("^([=><!]+)?\\s*([v\\d\\._-]+)$")
 var file_lock = new(sync.Mutex)
 var file_get = make(map[string]*sync.Mutex)
@@ -91,6 +92,10 @@ func (d *DependencyList) AddDependency(dep *Dependency) {
 	d.Dependencies = append(d.Dependencies, dep)
 }
 
+func (d *DependencyList) UniqueInstalled() int {
+	return len(global_unique)
+}
+
 func (d *DependencyList) Install() (int, error) {
 	if d == nil {
 		log.Debug("No dependencies to install")
@@ -151,6 +156,7 @@ func (d *DependencyList) Install() (int, error) {
 
 			global_installed[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
 			global_installed[dep.Module.Cached] = dep.Module
+			global_unique[dep.Module.Name] = 1
 
 			n += o
 			if err != nil {
@@ -524,6 +530,75 @@ func (m *Module) loadDependencies() error {
 					continue
 				}
 				m.Deps.AddDependency(dep)
+			}
+		}
+
+		log.Debug("Resolving module dependency list")
+		err := m.Deps.Resolve()
+		if err != nil {
+			log.Error("Error resolving dependency list: %s", err)
+			return err
+		}
+
+		return nil
+	}
+
+	// FIXME repeat of block above, just with more nested levels
+	if p, ok := meta["prereqs"]; ok {
+		if r, ok := p.(map[interface{}]interface{})["runtime"]; ok {
+			if reqs, ok := r.(map[interface{}]interface{})["requires"]; ok {
+				log.Debug("Found dependencies for module %s", m.Name)
+				switch reqs.(type) {
+				case map[interface{}]interface{}:
+					for req, ver := range reqs.(map[interface{}]interface{}) {
+						v := float64(0)
+						switch ver.(type) {
+						case string:
+							v, _ = strconv.ParseFloat(ver.(string), 64)
+						case int:
+							v = float64(ver.(int))
+						}
+						log.Printf("=> %s (%f)", req, v)
+						dep, err := DependencyFromString(req.(string), fmt.Sprintf("%f", ver))
+						if err != nil {
+							log.Error("Error parsing dependency: %s", err)
+							continue
+						}
+						if _, ok := perl_core[dep.Name]; ok {
+							log.Trace("Module is from perl core: %s", dep.Name)
+							continue
+						}
+						m.Deps.AddDependency(dep)
+					}
+				}
+			}
+		}
+		if t, ok := p.(map[interface{}]interface{})["test"]; ok {
+			if reqs, ok := t.(map[interface{}]interface{})["requires"]; ok {
+				log.Debug("Found dependencies for module %s", m.Name)
+				switch reqs.(type) {
+				case map[interface{}]interface{}:
+					for req, ver := range reqs.(map[interface{}]interface{}) {
+						v := float64(0)
+						switch ver.(type) {
+						case string:
+							v, _ = strconv.ParseFloat(ver.(string), 64)
+						case int:
+							v = float64(ver.(int))
+						}
+						log.Printf("=> %s (%f)", req, v)
+						dep, err := DependencyFromString(req.(string), fmt.Sprintf("%f", ver))
+						if err != nil {
+							log.Error("Error parsing dependency: %s", err)
+							continue
+						}
+						if _, ok := perl_core[dep.Name]; ok {
+							log.Trace("Module is from perl core: %s", dep.Name)
+							continue
+						}
+						m.Deps.AddDependency(dep)
+					}
+				}
 			}
 		}
 
