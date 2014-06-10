@@ -24,7 +24,7 @@
 		margin-bottom: 3px;
 	}
 </style>
-<h1>{{ range .PathBits }}<span class="pathpart"><a href="/browse{{ .Path }}">{{ .Name }}</a></span>{{ end }}</h1>
+<h1>{{ range .PathBits }}<span class="pathpart"><a href="{{ .Path }}">{{ .Name }}</a></span>{{ end }}</h1>
 
 {{ if .Package }}
 <div class="package">
@@ -42,7 +42,7 @@
 			<th>Provided by</th>
 			<td>
 				{{ range .Package.Packages }}
-					<div class="module"><a href="/browse/{{ .Package.VirtualURL }}"><span class="glyphicon glyphicon-compressed"></span> {{ .Package.VirtualURL }}</a></div>
+					<div class="module"><a href="/{{ .Package.VirtualURL }}"><span class="glyphicon glyphicon-compressed"></span> {{ .Package.VirtualURL }}</a></div>
 				{{ end }}
 			</td>
 		</tr>

@@ -40,7 +40,7 @@
 		<ul>
 		{{ range .Results }}
 			<li>
-				<a href="/browse/{{ .URL }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a>
+				<a href="/{{ .URL }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a>
 				<br />
 				<span class="path">{{ .URL }}</span>
 			</li>

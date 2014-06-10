@@ -172,23 +172,24 @@ func main() {
 
 	r.Get("/help", help)
 
+	r.Get("/browse", browse)
+
 	r.Get("/import", import1)
 	r.Post("/import", import1)
 
 	r.Get("/import/(?P<jobid>[^/]+)", import2)
 	r.Get("/import/(?P<jobid>[^/]+)/stream", importstream)
 
-	r.Get("/browse/(?P<repo>[^/]+)/authors/id/(?P<file>.*\\.tar\\.gz)", download)
-	r.Get("/browse/(?P<repo>[^/]+)/modules/02packages\\.details\\.txt(?P<gz>\\.gz)?", pkgindex)
-
-	r.Get("/browse", browse)
-	r.Get("/browse/(?P<repo>[^/]+)/?", browse)
-	r.Get("/browse/(?P<repo>[^/]+)/(?P<type>[^/]+)/?", browse)
-	r.Get("/browse/(?P<repo>[^/]+)/(?P<type>[^/]+)/(?P<path>.*)/?", browse)
-
 	// Serve static content (but really use a CDN)
 	r.Get("/images/(?P<file>.*)", r.Static("assets/images/{{file}}"))
 	r.Get("/css/(?P<file>.*)", r.Static("assets/css/{{file}}"))
+	
+	// Put these last so they only match /{repo} if nothing else matches
+	r.Get("/(?P<repo>[^/]+)/?", browse)
+	r.Get("/(?P<repo>[^/]+)/(?P<type>[^/]+)/?", browse)
+	r.Get("/(?P<repo>[^/]+)/modules/02packages\\.details\\.txt(?P<gz>\\.gz)?", pkgindex)
+	r.Get("/(?P<repo>[^/]+)/authors/id/(?P<file>.*\\.tar\\.gz)", download)
+	r.Get("/(?P<repo>[^/]+)/(?P<type>[^/]+)/(?P<path>.*)/?", browse)
 
 	// Start our application
 	app.Start()
@@ -317,12 +318,12 @@ func toplevelRepo() map[string]map[string]string {
 	for pos, _ := range mapped {
 		dirs[pos] = map[string]string{
 			"Name": pos,
-			"Path": "/browse/" + pos,
+			"Path": "/" + pos,
 		}
 	}	
 	dirs["SmartPAN"] = map[string]string{
 		"Name": "SmartPAN",
-		"Path": "/browse/SmartPAN",
+		"Path": "/SmartPAN",
 	}
 	return dirs
 }
@@ -334,11 +335,11 @@ func tlRepo1(idx string) (map[string]map[string]string, map[string]map[string]st
 
 	dirs["modules"] = map[string]string{
 		"Name": "modules",
-		"Path": "/browse/" + idx + "/modules",
+		"Path": "/" + idx + "/modules",
 	}
 	dirs["authors"] = map[string]string{
 		"Name": "authors",
-		"Path": "/browse/" + idx + "/authors",
+		"Path": "/" + idx + "/authors",
 	}
 	return dirs, files
 }
@@ -351,22 +352,22 @@ func tlRepo2(idx string, tl string) (map[string]map[string]string, map[string]ma
 	if tl == "modules" {
 		files["02packages.details.txt"] = map[string]string{
 			"Name": "02packages.details.txt",
-			"Path": "/browse/" + idx + "/modules/02packages.details.txt",
+			"Path": "/" + idx + "/modules/02packages.details.txt",
 		}
 		files["02packages.details.txt.gz"] = map[string]string{
 			"Name": "02packages.details.txt.gz",
-			"Path": "/browse/" + idx + "/modules/02packages.details.txt.gz",
+			"Path": "/" + idx + "/modules/02packages.details.txt.gz",
 		}
 		for k, _ := range packages {
 			files[k] = map[string]string{
 				"Name": k,
-				"Path": "/browse/" + idx + "/modules/" + k,
+				"Path": "/" + idx + "/modules/" + k,
 			}
 		}
 	} else if tl == "authors" {
 		dirs["id"] = map[string]string{
 			"Name": "id",
-			"Path": "/browse/" + idx + "/authors/id",
+			"Path": "/" + idx + "/authors/id",
 		}
 	}
 	return dirs, files
@@ -381,7 +382,7 @@ func tlAuthor1(idx string) map[string]map[string]string {
 			for pos, _ := range mapped[idx] {
 				dirs[pos] = map[string]string{
 					"Name": pos,
-					"Path": "/browse/SmartPAN/authors/id/" + pos,
+					"Path": "/SmartPAN/authors/id/" + pos,
 				}
 			}
 		}
@@ -389,7 +390,7 @@ func tlAuthor1(idx string) map[string]map[string]string {
 		for pos, _ := range mapped[idx] {
 			dirs[pos] = map[string]string{
 				"Name": pos,
-				"Path": "/browse/" + idx + "/authors/id/" + pos,
+				"Path": "/" + idx + "/authors/id/" + pos,
 			}
 		}
 	}
@@ -405,7 +406,7 @@ func tlAuthor2(idx string, fl string) map[string]map[string]string {
 			for pos, _ := range mapped[idx][fl] {
 				dirs[pos] = map[string]string{
 					"Name": pos,
-					"Path": "/browse/SmartPAN/authors/id/" + fl + "/" + pos,
+					"Path": "/SmartPAN/authors/id/" + fl + "/" + pos,
 				}
 			}
 		}
@@ -413,7 +414,7 @@ func tlAuthor2(idx string, fl string) map[string]map[string]string {
 		for pos, _ := range mapped[idx][fl] {
 			dirs[pos] = map[string]string{
 				"Name": pos,
-				"Path": "/browse/" + idx + "/authors/id/" + fl + "/" + pos,
+				"Path": "/" + idx + "/authors/id/" + fl + "/" + pos,
 			}
 		}
 	}
@@ -429,7 +430,7 @@ func tlAuthor3(idx string, fl string, sl string) map[string]map[string]string {
 			for pos, _ := range mapped[idx][fl][sl] {
 				dirs[pos] = map[string]string{
 					"Name": pos,
-					"Path": "/browse/SmartPAN/authors/id/" + fl + "/" + sl + "/" + pos,
+					"Path": "/SmartPAN/authors/id/" + fl + "/" + sl + "/" + pos,
 				}
 			}
 		}
@@ -437,7 +438,7 @@ func tlAuthor3(idx string, fl string, sl string) map[string]map[string]string {
 		for pos, _ := range mapped[idx][fl][sl] {
 			dirs[pos] = map[string]string{
 				"Name": pos,
-				"Path": "/browse/" + idx + "/authors/id/" + fl + "/" + sl + "/" + pos,
+				"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + pos,
 			}
 		}
 	}
@@ -453,7 +454,7 @@ func tlModuleList(idx string, author string) map[string]map[string]string {
 				for pos, _ := range auth.Packages {
 					files[pos] = map[string]string{
 						"Name": pos,
-						"Path": "/browse/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+						"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 					}
 				}
 			}
@@ -462,7 +463,7 @@ func tlModuleList(idx string, author string) map[string]map[string]string {
 		for pos, _ := range mapped[idx][author[:1]][author[:2]][author].Packages {
 			files[pos] = map[string]string{
 				"Name": pos,
-				"Path": "/browse/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+				"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 			}
 		}
 	}
@@ -586,6 +587,11 @@ func browse(session *http.Session) {
 	if r, ok := session.Stash["repo"]; ok {
 		repo = r.(string)
 		fpath += repo + "/"
+
+		if _, ok := indexes[repo]; !ok && repo != "SmartPAN" {
+			session.RenderNotFound()
+			return
+		}
 	}
 	if i, ok := session.Stash["type"]; ok {
 		itype = i.(string)
@@ -651,7 +657,7 @@ func browse(session *http.Session) {
 					for ns, _ := range ctx.Children {
 						files[ns] = map[string]string{
 							"Name": ns,
-							"Path": "/browse/" + repo + "/modules/" + path + "/" + ns,
+							"Path": "/" + repo + "/modules/" + path + "/" + ns,
 						}
 					}
 				} else {
@@ -667,7 +673,7 @@ func browse(session *http.Session) {
 					for ns, _ := range ctx.Children {
 						files[ns] = map[string]string{
 							"Name": ns,
-							"Path": "/browse/" + repo + "/modules/" + path + "/" + ns,
+							"Path": "/" + repo + "/modules/" + path + "/" + ns,
 						}
 					}
 				}
