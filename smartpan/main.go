@@ -206,7 +206,7 @@ func help(session *http.Session) {
 func search(session *http.Session) {
 	if q, ok := session.Request.Form()["q"]; ok {
 		query := strings.ToLower(q[0])
-		session.Stash["Query"] = query
+		session.Stash["Query"] = q[0]
 		results := make([]*SearchResult, 0)
 		var lock sync.Mutex
 
