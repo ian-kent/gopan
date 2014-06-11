@@ -9,6 +9,15 @@ import (
 	"encoding/json"
 )
 
+type Entry struct {
+	Parsed int
+	Filemtime int
+	Version string
+	Infile string
+	Simile string
+}
+type PLD map[string]*Entry
+
 func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string) {
 	// not required? path should already exist
 	os.MkdirAll(dirpath, 0770)
@@ -49,7 +58,8 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 	//var stdout2 bytes.Buffer
 	var stderr2 bytes.Buffer
 
-	cmd := exec.Command("perl", "-MModule::Metadata", "-MJSON::XS", "-e", "print encode_json(Module::Metadata->provides(version => 2, prefix => \"\", dir => $ARGV[0]))", extpath)
+	//cmd := exec.Command("perl", "-MModule::Metadata", "-MJSON::XS", "-e", "print encode_json(Module::Metadata->provides(version => 2, prefix => \"\", dir => $ARGV[0]))", extpath)
+	cmd := exec.Command("perl", "-MParse::LocalDistribution", "-MJSON::XS", "-e", "print encode_json(Parse::LocalDistribution->new->parse($ARGV[0]))", extpath)
 	//cmd.Stdout = &stdout2				
 	cmd.Stderr = &stderr2
 
@@ -65,7 +75,8 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 		return;
 	}
 
-	if err := json.NewDecoder(stdout).Decode(&pkg.Provides); err != nil {
+	var pld PLD
+	if err := json.NewDecoder(stdout).Decode(&pld); err != nil {
 		log.Error("JSON decoder error: %s", err.Error())
 		return;
 	}
@@ -78,10 +89,16 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 	//log.Trace(stdout2.String())
 	log.Trace(stderr2.String())
 
-	for p, pk := range pkg.Provides {
-		pk.Name = p
-		pk.Package = pkg
-		log.Trace("%s: %s %s", p, pk.Version, pk.File)
+	pkg.Provides = make(map[string]*gopan.PerlPackage)
+	for p, pk := range pld {
+		pp := &gopan.PerlPackage{
+			Package: pkg,
+			Name: p,
+			Version: pk.Version,
+			File: pk.Infile,
+		}
+		pkg.Provides[p] = pp
+		log.Trace("%s: %s %s", p, pp.Version, pp.File)
 	}
 
 	log.Debug("%s provides %d packages", pkg, len(pkg.Provides))

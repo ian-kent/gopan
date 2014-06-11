@@ -269,7 +269,7 @@ func (d *DependencyList) Resolve() error {
 			}
 
 			if err != nil {
-				log.Error("Error resolving module dependencies: %s", err)
+				log.Error("Error resolving module dependencies [%s]: %s", dep.Module.String(), err)
 				errorLock.Lock()
 				errs = append(errs, dep.Module.String())
 				errorLock.Unlock()
@@ -534,7 +534,7 @@ func (m *Module) loadDependencies() error {
 		log.Debug("Resolving module dependency list")
 		err := m.Deps.Resolve()
 		if err != nil {
-			log.Error("Error resolving dependency list: %s", err)
+			log.Error("Error resolving dependency list [%s]: %s", m.Name, err)
 			return err
 		}
 

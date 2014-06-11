@@ -25,6 +25,13 @@ of hosting a full CPAN/BackPAN mirror.
 - Run smartpan to host your local mirror
 - Use getpan instead of Carton or cpanm
 
+## Requirements
+
+You need to have Perl (tested on 5.18.2) with these modules:
+
+- Parse::LocalDistribution
+- JSON::XS
+
 ## SmartPAN (smartpan)
 
 CPAN repository server and web UI:
