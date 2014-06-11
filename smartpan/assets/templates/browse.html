@@ -16,15 +16,22 @@
 		vertical-align: top;
 		padding-right: 10px;
 	}
+	.dirlist {
+		font-size: 1.1em;
+	}
 	.dirlist ul {
 		list-style-type: none;
 		padding-left: 15px;
 	}
 	.dirlist ul li {
 		margin-bottom: 3px;
+		padding: 1px;
 	}
 </style>
+{{ if .PathBits }}
 <h1>{{ range .PathBits }}<span class="pathpart"><a href="{{ .Path }}">{{ .Name }}</a></span>{{ end }}</h1>
+{{ else }}
+{{ end }}
 
 {{ if .Package }}
 <div class="package">
@@ -57,7 +64,7 @@
 		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-folder-close"></span> {{ .Name }}</a></li>
 		{{ end }}
 		{{ range .Files }}
-		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-compressed"></span> {{ .Name }}</a></li>
+		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a></li>
 		{{ end }}
 	</ul>
 </div>

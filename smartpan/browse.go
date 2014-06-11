@@ -48,15 +48,18 @@ func tlRepo2(idx string, tl string) (map[string]map[string]string, map[string]ma
 		files["02packages.details.txt"] = map[string]string{
 			"Name": "02packages.details.txt",
 			"Path": "/" + idx + "/modules/02packages.details.txt",
+			"Glyph": "compressed",
 		}
 		files["02packages.details.txt.gz"] = map[string]string{
 			"Name": "02packages.details.txt.gz",
 			"Path": "/" + idx + "/modules/02packages.details.txt.gz",
+			"Glyph": "compressed",
 		}
 		for k, _ := range packages {
 			files[k] = map[string]string{
 				"Name": k,
 				"Path": "/" + idx + "/modules/" + k,
+				"Glyph": "briefcase",
 			}
 		}
 	} else if tl == "authors" {
@@ -169,6 +172,7 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 						files[pos] = map[string]string{
 							"Name": pos,
 							"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+							"Glyph": "compressed",
 						}
 					}
 				}
@@ -178,16 +182,30 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 						files[pos] = map[string]string{
 							"Name": pos,
 							"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+							"Glyph": "compressed",
 						}
 					}
 				}
 			}
 		}
 	} else {
-		for pos, _ := range mapped[idx][fl][sl][author].Packages {
-			files[pos] = map[string]string{
-				"Name": pos,
-				"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+		if author == "***" {
+			for author, _ := range mapped[idx][fl][sl] {
+				for pos, _ := range mapped[idx][fl][sl][author].Packages {
+					files[pos] = map[string]string{
+						"Name": pos,
+						"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+						"Glyph": "compressed",
+					}
+				}
+			}
+		} else {
+			for pos, _ := range mapped[idx][fl][sl][author].Packages {
+				files[pos] = map[string]string{
+					"Name": pos,
+					"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+					"Glyph": "compressed",
+				}
 			}
 		}
 	}
@@ -313,7 +331,10 @@ func browse(session *http.Session) {
 			"Path": cp,
 		})
 	}
-	session.Stash["PathBits"] = pp
+
+	if len(pp) > 0 && len(pp[0]["Name"]) > 0 {
+		session.Stash["PathBits"] = pp
+	}
 	
 	html, _ := session.RenderTemplate("browse.html")
 

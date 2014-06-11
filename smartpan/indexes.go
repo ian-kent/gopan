@@ -2,6 +2,7 @@ package main
 
 import(
 	"github.com/ian-kent/gopan/gopan"
+	"github.com/ian-kent/go-log/log"
 )
 
 // GoPAN indexes - CPAN, BackPAN etc
@@ -68,10 +69,11 @@ func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 		}
 		if len(parts) == 1 {
 			p.Children[parts[0]].Packages = append(p.Children[parts[0]].Packages, pkg)
-			p.Versions[pkg.Package.Version()] = pkg
 		} else {
 			p.Children[parts[0]].Populate(parts[1:], pkg)
 		}
+		p.Versions[pkg.Package.Version()] = pkg
+		log.Trace("Version linked: %f for %s in %s", pkg.Package.Version(), pkg.Name, p.Namespace)
 	}
 }
 

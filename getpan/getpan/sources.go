@@ -57,7 +57,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		log.Debug("=> Using SmartPAN source")
 		
 		url := s.URL + "/where/" + d.Name + "/" + d.Modifier + d.Version
-		log.Trace("Query: %s", url)
+		log.Info("Query: %s", url)
 		res, err := http.Get(url)
 
 		if err != nil {
@@ -70,6 +70,11 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		body, err := ioutil.ReadAll(res.Body)
 		log.Trace("Got response: %s", string(body))
 
+		if res.StatusCode != http.StatusOK {
+			log.Info("Module not found in SmartPAN: %s", d.Name)
+			return nil, nil
+		}
+
 		var v *WhereOutput
 		err = json.Unmarshal(body, &v)
 		if err != nil {
@@ -80,19 +85,20 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		log.Trace("Found module %s", v.Module)
 
 		if len(v.Versions) == 0 {
-			log.Error("Found module but no versions returned")
+			log.Info("Found module but no versions returned")
 			return nil, nil
 		}
 
 		var lv *VersionOutput
 		for _, ver := range v.Versions {
 			if ver.Version == v.Latest {
-				log.Trace("Using latest version: %f", ver.Version)
+				log.Info("Using latest version of %s: %f", v.Module, ver.Version)
 				lv = ver
+				break;
 			}
 		}
 		if lv == nil {
-			log.Trace("Couldn't find latest version, selecting first available")
+			log.Info("Couldn't find latest version, selecting first available")
 			lv = v.Versions[0]
 		}
 

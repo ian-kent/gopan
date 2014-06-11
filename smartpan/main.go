@@ -49,6 +49,8 @@ func main() {
 				filemap[pkg.AuthorURL()] = idn
 				for _, prov := range pkg.Provides {
 					parts := strings.Split(prov.Name, "::")
+					log.Trace("PACKAGE: %s", prov.Name)
+
 					if _, ok := packages[parts[0]]; !ok {
 						packages[parts[0]] = &PkgSpace{
 							Namespace: parts[0],
@@ -75,6 +77,7 @@ func main() {
 						packages[parts[0]].Versions[prov.Package.Version()] = prov
 						idxpackages[idx.Name][parts[0]].Packages = append(idxpackages[idx.Name][parts[0]].Packages, prov)
 						idxpackages[idx.Name][parts[0]].Versions[prov.Package.Version()] = prov
+						log.Trace("Version linked: %f for %s", prov.Package.Version(), prov.Name)
 					} else {
 						packages[parts[0]].Populate(parts[1:], prov)
 						idxpackages[idx.Name][parts[0]].Populate(parts[1:], prov)

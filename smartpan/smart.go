@@ -27,29 +27,28 @@ func where(session *http.Session) {
 	module := session.Stash["module"].(string)
 	log.Info("Looking for module: %s", module)
 
-	ns := strings.Split(module, "::")
-
-	if _, ok := packages[ns[0]]; !ok {
-		log.Info("Top-level namespace [%s] not found", ns[0])
+    ns := strings.Split(module, "::")
+    if _, ok := packages[ns[0]]; !ok {
+        log.Info("Top-level namespace [%s] not found", ns[0])
 		session.Response.Status = 404
 		session.Response.Send()
 		return
 	}
 
-	mod := packages[ns[0]]
+    mod := packages[ns[0]]
 
-	ns = ns[1:]
-	for len(ns)	> 0 {
-		if _, ok := mod.Children[ns[0]]; !ok {
-			log.Info("Child namespace [%s] not found", ns[0])
-			session.Response.Status = 404
-			session.Response.Send()
-			return
-		}
-		log.Info("Found child namespace [%s]", ns[0])
-		mod = mod.Children[ns[0]]
-		ns = ns[1:]
-	}
+    ns = ns[1:]
+    for len(ns) > 0 {
+        if _, ok := mod.Children[ns[0]]; !ok {
+                log.Info("Child namespace [%s] not found", ns[0])
+                session.Response.Status = 404
+                session.Response.Send()
+                return
+        }
+        log.Info("Found child namespace [%s]", ns[0])
+        mod = mod.Children[ns[0]]
+        ns = ns[1:]
+    }
 
 	var version string
 	if _, ok := session.Stash["version"]; ok {
@@ -58,6 +57,13 @@ func where(session *http.Session) {
 			version = strings.TrimPrefix(version, "v")
 		}
 		log.Info("Looking for version: %s", version)
+	}
+
+	if len(mod.Versions) == 0 {
+		log.Info("Module has no versions in index")
+		session.Response.Status = 404
+		session.Response.Send()
+		return	
 	}
 
 	versions := make([]*VersionOutput, 0)
@@ -86,6 +92,7 @@ func where(session *http.Session) {
 		}
 	} else {
 		for v, pkg := range mod.Versions {
+			log.Info("Found version: %f", v)
 			versions = append(versions, &VersionOutput{
 				Index: pkg.Package.Author.Source.Name,
 				URL: pkg.Package.VirtualURL(),
@@ -105,6 +112,8 @@ func where(session *http.Session) {
 	}
 
 	b, err := json.MarshalIndent(o, "", "  ")
+
+	log.Info("Output: %s", string(b))
 
 	if err != nil {
 		log.Error("Failed encoding JSON: %s", err.Error())

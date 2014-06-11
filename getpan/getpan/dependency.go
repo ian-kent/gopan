@@ -243,6 +243,7 @@ func (d *DependencyList) Resolve() error {
 				if d.Parent != nil {
 					if d.Parent.IsCircular(dep.Module) {
 						log.Error("Detected circular dependency %s from module %s", dep.Module, d.Parent)
+						<-semaphore
 						return
 					}
 				}
