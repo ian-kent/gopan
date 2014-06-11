@@ -1,6 +1,12 @@
 <h1>Import CPAN module</h1>
 <hr>
 
+<style>
+.tab-pane p {
+	margin-top: 10px;
+}
+</style>
+
 <form role="form" method="post" action="" enctype="multipart/form-data">
 	{{ if .fh.HasErrors }}
 	<div class="alert alert-danger">
@@ -48,6 +54,9 @@
 
 			<div class="tab-content">
 			  <div class="tab-pane active" id="from-paste">
+			  	<p>
+			  		You can import a full application dependency tree by pasting a cpanfile.
+			  	</p>
 			  	{{ if .fh.Errors.Cpanfile }}
 				<div class="alert alert-danger">
 					{{ range .fh.Errors.Cpanfile }}
@@ -58,6 +67,9 @@
 				<textarea name="cpanfile" class="form-control" rows="10">{{ .fh.Model.Cpanfile }}</textarea>
 			  </div>
 			  <div class="tab-pane" id="from-url">
+			    <p>
+			  		You can import modules from a local or remote server using HTTP or HTTPS.
+			  	</p>
 			    {{ if .fh.Errors.ImportURL }}
 			  	<div class="alert alert-danger">
 					{{ range .fh.Errors.ImportURL }}
@@ -68,6 +80,9 @@
 				<input name="importurl" type="text" class="form-control" value="{{ .fh.Model.ImportURL }}" placeholder="http://path.to/Your-Module-0.01.tar.gz">
 			  </div>
 			  <div class="tab-pane" id="from-dir">
+			  	<p>
+			  		You can import modules from local storage attached to the SmartPAN host.
+			  	</p>
 			    {{ if .fh.Errors.FromDir }}
 			  	<div class="alert alert-danger">
 					{{ range .fh.Errors.FromDir }}
@@ -75,9 +90,12 @@
 					{{ end }}
 				</div>
 				{{ end }}
-				<input name="fromdir" type="text" class="form-control" value="{{ .fh.Model.FromDir }}" placeholder="/home/user/cpan/Your-Module-0.01.tar.gz">
+				<input name="fromdir" type="text" class="form-control" value="{{ .fh.Model.FromDir }}" placeholder="/home/smartpan/cache/Your-Module-0.01.tar.gz">
 			  </div>
 			  <div class="tab-pane" id="from-upload">
+			    <p>
+			  		You can import modules by uploading either a cpanfile or .tar.gz file.
+			  	</p>
 			    {{ if .fh.Errors.FromFile }}
 			  	<div class="alert alert-danger">
 					{{ range .fh.Errors.FromFile }}
@@ -101,7 +119,7 @@
 		<h3>Set an author ID</h3>
 		<div class="container">
 			<p>
-			You need to set an author ID (minimum 3 characters) if you import a .tar.gz file directly.
+			You need to set an author ID (minimum 3 characters) if you import a .tar.gz file. cpanfile dependencies have known authors.
 			</p>
 			<input type="text" class="form-control" name="authorid" value="{{ .fh.Model.AuthorID }}">
 		</div>
