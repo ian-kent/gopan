@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/gopan"
 	"gopkg.in/yaml.v1"
 	"io"
 	"io/ioutil"
@@ -13,7 +14,6 @@ import (
 	"os/exec"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -250,23 +250,24 @@ func (d *DependencyList) Resolve() error {
 
 				global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
 				global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
-			}
 
-			log.Debug("Resolving module dependencies: %s", dep.Module)
-			dep.Module.Deps = &DependencyList{
-				Parent:       dep.Module,
-				Dependencies: make([]*Dependency, 0),
-			}
-
-			if dep.Additional != nil && len(dep.Additional) > 0 {
-				log.Trace("Adding cpanfile additional REQS")
-				for _, additional := range dep.Additional {
-					log.Trace("Adding additional dependency from cpanfile: %s", additional)
-					dep.Module.Deps.AddDependency(additional)
+				log.Debug("Resolving module dependencies: %s", dep.Module)
+				dep.Module.Deps = &DependencyList{
+					Parent:       dep.Module,
+					Dependencies: make([]*Dependency, 0),
 				}
+
+				if dep.Additional != nil && len(dep.Additional) > 0 {
+					log.Trace("Adding cpanfile additional REQS")
+					for _, additional := range dep.Additional {
+						log.Trace("Adding additional dependency from cpanfile: %s", additional)
+						dep.Module.Deps.AddDependency(additional)
+					}
+				}
+
+				err = dep.Module.loadDependencies()
 			}
 
-			err = dep.Module.loadDependencies()
 			if err != nil {
 				log.Error("Error resolving module dependencies: %s", err)
 				errorLock.Lock()
@@ -315,16 +316,9 @@ func (v *Dependency) Resolve() error {
 
 func (v *Dependency) MatchesVersion(version string) bool {
 	dversion := v.Version
-	if strings.HasPrefix(dversion, "v") {
-		dversion = strings.TrimPrefix(dversion, "v")
-	}
 
-	if strings.HasPrefix(version, "v") {
-		version = strings.TrimPrefix(version, "v")
-	}
-
-	dv, _ := strconv.ParseFloat(dversion, 64)
-	mv, _ := strconv.ParseFloat(version, 64)
+	dv := gopan.VersionFromString(dversion)
+	mv := gopan.VersionFromString(version)
 
 	valid := false
 	switch v.Modifier {
@@ -519,7 +513,7 @@ func (m *Module) loadDependencies() error {
 				v := float64(0)
 				switch ver.(type) {
 				case string:
-					v, _ = strconv.ParseFloat(ver.(string), 64)
+					v = gopan.VersionFromString(ver.(string))
 				case int:
 					v = float64(ver.(int))
 				}
@@ -558,7 +552,7 @@ func (m *Module) loadDependencies() error {
 						v := float64(0)
 						switch ver.(type) {
 						case string:
-							v, _ = strconv.ParseFloat(ver.(string), 64)
+							v = gopan.VersionFromString(ver.(string))
 						case int:
 							v = float64(ver.(int))
 						}
@@ -586,7 +580,7 @@ func (m *Module) loadDependencies() error {
 						v := float64(0)
 						switch ver.(type) {
 						case string:
-							v, _ = strconv.ParseFloat(ver.(string), 64)
+							v = gopan.VersionFromString(ver.(string))
 						case int:
 							v = float64(ver.(int))
 						}

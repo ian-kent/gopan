@@ -74,10 +74,10 @@ func main() {
 					}
 					if len(parts) == 1 {
 						packages[parts[0]].Packages = append(packages[parts[0]].Packages, prov)
-						packages[parts[0]].Versions[prov.Package.Version()] = prov
+						packages[parts[0]].Versions[gopan.VersionFromString(prov.Version)] = prov
 						idxpackages[idx.Name][parts[0]].Packages = append(idxpackages[idx.Name][parts[0]].Packages, prov)
-						idxpackages[idx.Name][parts[0]].Versions[prov.Package.Version()] = prov
-						log.Trace("Version linked: %f for %s", prov.Package.Version(), prov.Name)
+						idxpackages[idx.Name][parts[0]].Versions[gopan.VersionFromString(prov.Version)] = prov
+						log.Trace("Version linked: %f for %s", gopan.VersionFromString(prov.Version), prov.Name)
 					} else {
 						packages[parts[0]].Populate(parts[1:], prov)
 						idxpackages[idx.Name][parts[0]].Populate(parts[1:], prov)

@@ -65,7 +65,25 @@ func (p *Package) Version() float64 {
 		}
 	}
 
-	p.cachedVer, _ = strconv.ParseFloat(v, 64)
+	p.cachedVer = VersionFromString(v)
 
 	return p.cachedVer
+}
+
+// An attempt at turning random version numbers into comparable floats!
+func VersionFromString(version string) float64 {
+	if len(version) == 0 || version == "undef" {
+		return float64(0)
+	}
+
+	if strings.HasPrefix(version, "v") {
+		version = strings.TrimPrefix(version, "v")
+	}
+	version = strings.Replace(version, "-", ".", -1)
+	version = strings.Replace(version, "_", ".", -1)
+	parts := strings.Split(version, ".")
+	version = parts[0] + "." + strings.Join(parts[1:], "")
+
+	f, _ := strconv.ParseFloat(version, 64)
+	return f
 }

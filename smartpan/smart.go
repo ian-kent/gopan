@@ -4,9 +4,9 @@ import (
 	"github.com/ian-kent/gotcha/http"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/getpan/getpan"
+	"github.com/ian-kent/gopan/gopan"
 	"strings"
 	"encoding/json"
-	"fmt"
 )
 
 // FIXME same structs in both smartpan and getpan
@@ -71,13 +71,13 @@ func where(session *http.Session) {
 	if len(version) > 0 {
 		dep, _ := getpan.DependencyFromString(module, version)
 		for v, md := range mod.Versions {
-			log.Info("Matching [%s] against [%f]", dep.Version, md.Package.Version())
-			if dep.MatchesVersion(fmt.Sprintf("%f", md.Package.Version())) {	
+			log.Info("Matching [%s] against md.Version [%s], md.Package.Version [%f]", dep.Version, md.Version, md.Package.Version())
+			if dep.MatchesVersion(md.Version) {
 				vout := &VersionOutput{
 					Index: md.Package.Author.Source.Name,
 					URL: md.Package.VirtualURL(),
 					Path: md.Package.AuthorURL(),
-					Version: v,
+					Version: gopan.VersionFromString(md.Version),
 				}
 				versions = append(versions, vout)
 				if v > lv { lv = v }
@@ -97,7 +97,7 @@ func where(session *http.Session) {
 				Index: pkg.Package.Author.Source.Name,
 				URL: pkg.Package.VirtualURL(),
 				Path: pkg.Package.AuthorURL(),
-				Version: v,
+				Version: gopan.VersionFromString(pkg.Version),
 			})
 			if v > lv { lv = v }
 		}

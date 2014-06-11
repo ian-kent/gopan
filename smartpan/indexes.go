@@ -69,11 +69,11 @@ func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 		}
 		if len(parts) == 1 {
 			p.Children[parts[0]].Packages = append(p.Children[parts[0]].Packages, pkg)
+			p.Children[parts[0]].Versions[gopan.VersionFromString(pkg.Version)] = pkg
+			log.Trace("Version linked: %f for %s in %s", gopan.VersionFromString(pkg.Version), pkg.Name, p.Namespace)
 		} else {
 			p.Children[parts[0]].Populate(parts[1:], pkg)
 		}
-		p.Children[parts[0]].Versions[pkg.Package.Version()] = pkg
-		log.Trace("Version linked: %f for %s in %s", pkg.Package.Version(), pkg.Name, p.Namespace)
 	}
 }
 
