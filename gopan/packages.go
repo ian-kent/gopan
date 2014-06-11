@@ -46,11 +46,11 @@ func (p *Package) Version() float64 {
 	for _, prov := range p.Provides {
 		if len(prov.Version) > 0 && prov.Version != "undef" {
 			if len(v) == 0 {
-				log.Info("No version cached, using first version found [%s] from [%s]", prov.Version, prov.Name)
+				log.Trace("No version cached, using first version found [%s] from [%s]", prov.Version, prov.Name)
 				v = prov.Version
 			} else {
 				if p.Name == strings.Replace(prov.Name, "::", "-", -1) + "-" + prov.Version {
-					log.Info("Version cached but found better match, using [%s] from [%s]", prov.Version, prov.Name)
+					log.Trace("Version cached but found better match, using [%s] from [%s]", prov.Version, prov.Name)
 					v = prov.Version
 				}
 			}
@@ -60,7 +60,7 @@ func (p *Package) Version() float64 {
 	if len(v) == 0 {
 		matches := fnToVer.FindStringSubmatch(p.Name)
 		if len(matches) >= 3 {
-			log.Info("Found regex match: %s", matches[2])
+			log.Trace("Found regex match: %s", matches[2])
 			v = matches[2]
 		}
 	}

@@ -312,19 +312,18 @@ func (v *Dependency) Resolve() error {
 	return errors.New(fmt.Sprintf("Dependency not found from any source: %s", v))
 }
 
-func (v *Dependency) Matches(module *Module) bool {
+func (v *Dependency) MatchesVersion(version string) bool {
 	dversion := v.Version
 	if strings.HasPrefix(dversion, "v") {
 		dversion = strings.TrimPrefix(dversion, "v")
 	}
 
-	mversion := module.Version
-	if strings.HasPrefix(mversion, "v") {
-		mversion = strings.TrimPrefix(mversion, "v")
+	if strings.HasPrefix(version, "v") {
+		version = strings.TrimPrefix(version, "v")
 	}
 
 	dv, _ := strconv.ParseFloat(dversion, 64)
-	mv, _ := strconv.ParseFloat(mversion, 64)
+	mv, _ := strconv.ParseFloat(version, 64)
 
 	valid := false
 	switch v.Modifier {
@@ -356,6 +355,10 @@ func (v *Dependency) Matches(module *Module) bool {
 	}
 	log.Trace("=> Result: %t", valid)
 	return valid
+}
+
+func (v *Dependency) Matches(module *Module) bool {
+	return v.MatchesVersion(module.Version)
 }
 
 func DependencyFromString(name string, dependency string) (*Dependency, error) {

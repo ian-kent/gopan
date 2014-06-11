@@ -35,6 +35,20 @@ CPAN repository server and web UI:
 - Import from URL or local disk
 - Upload with curl or a web browser
 
+### HTTP API
+
+You can query SmartPAN using HTTP to locate modules.
+
+#### List all versions of a module
+
+    curl -X GET http://path.to/SmartPAN/where/Module::Name
+
+#### List all matching versions of a module
+
+    curl -X GET http://path.to/SmartPAN/where/Module::Name/1.92
+    curl -X GET http://path.to/SmartPAN/where/Module::Name/==3.99
+    curl -X GET http://path.to/SmartPAN/where/Module::Name/>=2.00
+
 #### TODO
 
 - Add "latest" version to indexes for
