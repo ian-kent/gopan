@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"encoding/json"
 )
 
 // Matches cpan 02packages.details.txt format
@@ -25,6 +26,20 @@ type Source struct {
 	ModuleList map[string]*Module
 }
 
+// FIXME same structs in both smartpan and getpan
+type VersionOutput struct {
+	Path string
+	URL string
+	Index string
+	Version float64
+}
+
+type WhereOutput struct {
+	Module string
+	Latest float64	
+	Versions []*VersionOutput
+}
+
 func NewSource(Type string, Index string, URL string) *Source {
 	return &Source{
 		Type:       Type,
@@ -38,6 +53,55 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 	log.Debug("Finding dependency: %s", d)
 
 	switch s.Type {
+	case "SmartPAN":
+		log.Debug("=> Using SmartPAN source")
+		
+		url := s.URL + "/where/" + d.Name + "/" + d.Modifier + d.Version
+		log.Trace("Query: %s", url)
+		res, err := http.Get(url)
+
+		if err != nil {
+			log.Error("Error querying SmartPAN: %s", err.Error())
+			return nil, err
+		}
+
+		defer res.Body.Close()
+
+		body, err := ioutil.ReadAll(res.Body)
+		log.Trace("Got response: %s", string(body))
+
+		var v *WhereOutput
+		err = json.Unmarshal(body, &v)
+		if err != nil {
+			log.Error("Error parsing JSON: %s", err.Error())
+			return nil, err
+		}
+
+		log.Trace("Found module %s", v.Module)
+
+		if len(v.Versions) == 0 {
+			log.Error("Found module but no versions returned")
+			return nil, nil
+		}
+
+		var lv *VersionOutput
+		for _, ver := range v.Versions {
+			if ver.Version == v.Latest {
+				log.Trace("Using latest version: %f", ver.Version)
+				lv = ver
+			}
+		}
+		if lv == nil {
+			log.Trace("Couldn't find latest version, selecting first available")
+			lv = v.Versions[0]
+		}
+
+		return &Module{
+			Name: d.Name,
+			Version: fmt.Sprintf("%f", lv.Version),
+			Source: s,
+			Url: lv.URL,
+		}, nil
 	case "CPAN":
 		log.Debug("=> Using CPAN source")
 		if mod, ok := s.ModuleList[d.Name]; ok {
@@ -83,6 +147,9 @@ func (s *Source) Load() error {
 	case "BackPAN":
 		log.Debug("=> Got BackPAN source")
 		return s.loadBackPANSource()
+	case "SmartPAN":
+		log.Debug("=> Got SmartPAN source")
+		return nil
 	default:
 		log.Error("Unrecognised source type: %s", s.Type)
 		return errors.New(fmt.Sprintf("Unrecognised source: %s", s))

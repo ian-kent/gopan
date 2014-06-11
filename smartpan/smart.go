@@ -9,6 +9,7 @@ import (
 	"fmt"
 )
 
+// FIXME same structs in both smartpan and getpan
 type VersionOutput struct {
 	Path string
 	URL string
@@ -60,6 +61,7 @@ func where(session *http.Session) {
 	}
 
 	versions := make([]*VersionOutput, 0)
+	lv := float64(0)
 	if len(version) > 0 {
 		dep, _ := getpan.DependencyFromString(module, version)
 		for v, md := range mod.Versions {
@@ -72,6 +74,7 @@ func where(session *http.Session) {
 					Version: v,
 				}
 				versions = append(versions, vout)
+				if v > lv { lv = v }
 			}
 		}
 
@@ -89,6 +92,7 @@ func where(session *http.Session) {
 				Path: pkg.Package.AuthorURL(),
 				Version: v,
 			})
+			if v > lv { lv = v }
 		}
 	}
 
@@ -96,7 +100,7 @@ func where(session *http.Session) {
 	
 	o := &WhereOutput{
 		Module: mod.FullName(),
-		Latest: mod.Version(),
+		Latest: lv,
 		Versions: versions,
 	}
 

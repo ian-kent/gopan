@@ -50,17 +50,21 @@ func (c *Config) Dump() {
 	log.Info("=> Parallelism: %d", c.CPUs)
 }
 
-func DefaultSources() []*Source {
+func DefaultSources(cpan bool, backpan bool) []*Source {
 	// TODO option to disable default CPAN/BackPAN sources
-	return []*Source{
-		NewSource("CPAN", "http://www.cpan.org/modules/02packages.details.txt.gz", "http://www.cpan.org"),
-		NewSource("BackPAN", "http://gitpan.integra.net/backpan-index.gz", "http://backpan.perl.org"),
+	sources := make([]*Source, 0)
+	if cpan {
+		sources = append(sources, NewSource("CPAN", "http://www.cpan.org/modules/02packages.details.txt.gz", "http://www.cpan.org"))
 	}
+	if backpan {
+		sources = append(sources, NewSource("BackPAN", "http://gitpan.integra.net/backpan-index.gz", "http://backpan.perl.org"))
+	}
+	return sources
 }
 
 func DefaultConfig() *Config {
 	config = &Config{
-		Sources: DefaultSources(),
+		Sources: DefaultSources(true, true),
 		NoTest: &NoTestConfig{
 			Global:  false,
 			Modules: make(map[string]bool),
@@ -82,11 +86,20 @@ func Configure() *Config {
 	backpan := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&backpan), "backpan", "A BackPAN mirror (can be specified multiple times)")
 
+	smart := make([]string, 0)
+	flag.Var((*gopan.AppendSliceValue)(&smart), "smart", "A SmartPAN mirror (can be specified multiple times)")
+
 	notest := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&notest), "notest", "A module to install without testing (can be specified multiple times)")
 
 	nevertest := false
 	flag.BoolVar(&nevertest, "nevertest", false, "Disables all tests during installation phase")
+
+	nocpan := false
+	flag.BoolVar(&nocpan, "nocpan", false, "Disables the default CPAN source")
+
+	nobackpan := false
+	flag.BoolVar(&nobackpan, "nobackpan", false, "Disables the default BackCPAN source")
 
 	cpanfile := "cpanfile"
 	flag.StringVar(&cpanfile, "cpanfile", "cpanfile", "The cpanfile to install")
@@ -107,6 +120,10 @@ func Configure() *Config {
 
 	log.Info("GoPAN configuration:")
 
+	if nocpan || nobackpan {
+		conf.Sources = DefaultSources(!nocpan, !nobackpan)
+	}
+
 	// parse cpan mirrors
 	for _, mirror := range cpan {
 		m := NewSource("CPAN", mirror+"/modules/02packages.details.txt.gz", mirror)
@@ -116,6 +133,12 @@ func Configure() *Config {
 	// parse backpan mirrors
 	for _, mirror := range backpan {
 		m := NewSource("BackPAN", mirror+"/backpan-index", mirror) // FIXME
+		conf.Sources = append(conf.Sources, m)
+	}
+
+	// parse smartpan mirrors
+	for _, mirror := range smart {
+		m := NewSource("SmartPAN", mirror, mirror)
 		conf.Sources = append(conf.Sources, m)
 	}
 
