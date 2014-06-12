@@ -418,6 +418,7 @@ func do_import(session *http.Session, job *ImportJob) {
 						Packages: make([]*gopan.PerlPackage, 0),
 						Children: make(map[string]*PkgSpace),
 						Parent: nil,
+						Versions: make(map[float64]*gopan.PerlPackage),
 					}
 				}
 				if _, ok := idxpackages[reponame][parts[0]]; !ok {
@@ -426,6 +427,7 @@ func do_import(session *http.Session, job *ImportJob) {
 						Packages: make([]*gopan.PerlPackage, 0),
 						Children: make(map[string]*PkgSpace),
 						Parent: nil,
+						Versions: make(map[float64]*gopan.PerlPackage),
 					}
 				}
 				if len(parts) == 1 {
