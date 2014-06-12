@@ -430,7 +430,9 @@ func do_import(session *http.Session, job *ImportJob) {
 				}
 				if len(parts) == 1 {
 					packages[parts[0]].Packages = append(packages[parts[0]].Packages, prov)
+					packages[parts[0]].Versions[gopan.VersionFromString(prov.Version)] = prov
 					idxpackages[reponame][parts[0]].Packages = append(idxpackages[reponame][parts[0]].Packages, prov)
+					idxpackages[reponame][parts[0]].Versions[gopan.VersionFromString(prov.Version)] = prov
 				} else {
 					packages[parts[0]].Populate(parts[1:], prov)
 					idxpackages[reponame][parts[0]].Populate(parts[1:], prov)
