@@ -85,7 +85,7 @@ func search(session *http.Session) {
 									results = append(results, &SearchResult{
 										Name: prov.Name,
 										Type: "Package",
-										URL: idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
+										URL: idx.Name + "/modules/" + strings.Replace(prov.Name, "::", "/", -1),
 										Obj: prov,
 										Glyph: "briefcase",
 									})
