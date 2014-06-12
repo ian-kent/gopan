@@ -91,6 +91,7 @@ func main() {
 
 	// Create our Gotcha application
 	var app = gotcha.Create(Asset)
+	app.Config.Listen = config.Bind
 
 	nsrc, nauth, npkg, nprov := gopan.CountIndex(indexes)
 	// TODO should probably be in the index - needs to udpate when index changes
