@@ -171,7 +171,7 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
 							"Name": pos,
-							"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+							"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 							"Glyph": "compressed",
 						}
 					}
@@ -181,7 +181,7 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
 							"Name": pos,
-							"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+							"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 							"Glyph": "compressed",
 						}
 					}
@@ -194,7 +194,7 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 				for pos, _ := range mapped[idx][fl][sl][author].Packages {
 					files[pos] = map[string]string{
 						"Name": pos,
-						"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+						"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 						"Glyph": "compressed",
 					}
 				}
@@ -203,7 +203,7 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 			for pos, _ := range mapped[idx][fl][sl][author].Packages {
 				files[pos] = map[string]string{
 					"Name": pos,
-					"Path": "/" + idx + "/authors/id/" + fl + "/" + sl + "/" + author + "/" + pos,
+					"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 					"Glyph": "compressed",
 				}
 			}

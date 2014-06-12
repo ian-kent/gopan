@@ -373,21 +373,41 @@ func do_import(session *http.Session, job *ImportJob) {
 
 		if _, ok := indexes[reponame].Authors[auth]; !ok {
 			msg(" | Creating author: " + auth)
-			indexes[reponame].Authors[auth] = &gopan.Author{
+			author := &gopan.Author{
 					Source: indexes[reponame],
 					Name: auth,
 					Packages: make(map[string]*gopan.Package),
 					URL: "/authors/id/" + auth[:1] + "/" + auth[:2] + "/" + auth + "/",
 			}
-			if _, ok := mapped[reponame][auth[:1]]; !ok {
-				mapped[reponame][auth[:1]] = make(map[string]map[string]*gopan.Author)	
+			indexes[reponame].Authors[auth] = author
+
+			// author name
+			if _, ok := mapped[reponame][author.Name[:1]]; !ok {
+				mapped[reponame][author.Name[:1]] = make(map[string]map[string]*gopan.Author)
 			}
-			if _, ok := mapped[reponame][auth[:1]][auth[:2]]; !ok {
-				mapped[reponame][auth[:1]][auth[:2]] = make(map[string]*gopan.Author)	
+			if _, ok := mapped[reponame][author.Name[:1]][author.Name[:2]]; !ok {
+				mapped[reponame][author.Name[:1]][author.Name[:2]] = make(map[string]*gopan.Author)
 			}
-			if _, ok := mapped[reponame][auth[:1]][auth[:2]][auth]; !ok {
-				mapped[reponame][auth[:1]][auth[:2]][auth] = indexes[reponame].Authors[auth]
+			mapped[reponame][author.Name[:1]][author.Name[:2]][author.Name] = author
+
+			// wildcards
+			if _, ok := mapped[reponame]["*"]; !ok {
+				mapped[reponame]["*"] = make(map[string]map[string]*gopan.Author)
 			}
+			if _, ok := mapped[reponame]["*"]["**"]; !ok {
+				mapped[reponame]["*"]["**"] = make(map[string]*gopan.Author)
+			}
+			mapped[reponame]["*"]["**"][author.Name] = author
+
+			// combos				
+			if _, ok := mapped[reponame][author.Name[:1]]["**"]; !ok {
+				mapped[reponame][author.Name[:1]]["**"] = make(map[string]*gopan.Author)
+			}
+			if _, ok := mapped[reponame]["*"][author.Name[:2]]; !ok {
+				mapped[reponame]["*"][author.Name[:2]] = make(map[string]*gopan.Author)
+			}
+			mapped[reponame][author.Name[:1]]["**"][author.Name] = author
+			mapped[reponame]["*"][author.Name[:2]][author.Name] = author
 		}
 
 		if _, ok := indexes[reponame].Authors[auth].Packages[fn]; !ok {
