@@ -1,161 +1,70 @@
 GoPAN
 =====
 
-A multithreaded Perl dependency manager.
+GoPAN provides a full end-to-end toolchain to mirror, index, host and install from
+a CPAN, BackPAN or DarkPAN repository.
 
-- Builds a full dependency tree from a cpanfile
-- Downloads CPAN archives to local cache
-- Resolves dependency installation order
-- Supports multiple CPAN mirrors
-- Supports BackPAN for old module versions
-- Per-module notest and dependency fixes
-- Should work on most platforms (requires cpanm!)
+Mirrors hosted by [SmartPAN](smartpan/README.md) are fully Carton/cpanm compatible,
+but also support the `SmartPAN` interface used by [GetPAN](getpan/README.md).
 
-```
-    ./get_backpan_index.sh
-	getpan -cpanfile application.cpanfile -cpan http://your.mirror -cpan http://another.mirror
-```
+[GetPAN](getpan/README.md) is also Carton/cpanm compatible and works with CPAN, BackPAN,
+and DarkPAN mirrors using Pinto and Orepan. When used with [SmartPAN](smartpan/README.md),
+the `SmartPAN` interface fixes dependency resolution issues which exist with typical CPAN 
+indexes.
 
-Also includes a *PAN mirroring tool:
+| [SmartPAN](smartpan/README.md) | Host a DarkPAN, BackPAN or CPAN mirror
+| [GetPAN](getpan/README.md)     | Carton/cpanfile compatible dependency installer
+| [MirroPAN](mirropan/README.md) | CPAN/BackPAN brute-force mirroring
+| [PANdex](pandex/README.md)     | CPAN module indexer
 
-```
-    pandex
-```
+## Getting started
 
-### getpan
+### Requirements
 
-`getpan` resolves cpanfile dependencies and caches the module releases locally.
+You need Perl (preferably >=5.18.2) and the following modules for indexing
+(used by PANDex and SmartPAN).
 
-It installs CPAN modules to `./local`. It's carton compatible, so running 
-`carton install` after getpan creates a cpanfile.snapshot file.
+- Parse::LocalDistribution
+- JSON::XS
 
-#### Command line options
+All other GoPAN tools are entirely self-contained.
 
-| Option            | Example                          | Description
-| ---------         | -------                          | -----------
-| -h                | -h                               | Display usage information
-| -backpan          | -backpan http://backpan.perl.org | A BackPAN mirror to use (can be specified multiple times)
-| -cpan             | -cpan http://www.cpan.org        | A CPAN mirror to use (can be specified multiple times)
-| -cpanfile         | -cpanfile app.cpanfile           | The cpanfile to install from
-| -cpus             | -cpus 4                          | Number of CPUs to use
-| -loglayout        | -loglayout="[%d] %m"             | A github.com/ian-kent/go-log compatible pattern layout
-| -loglevel         | -loglevel=TRACE                  | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
-| -nevertest        | -nevertest                       | Disables all installation tests
-| -noinstall        | -noinstall                       | If provided, install phase will be skipped
-| -notest           | -notest AnyCache                 | Disables module tests
+### Replacing Carton/cpanm
 
-### pandex
+Use [GetPAN](getpan/README.md) in place of Carton or cpanm.
 
-`pandex` brute-force mirrors a *PAN repository by scanning the HTML indexes for links.
+**Note** GetPAN uses cpanm internally, but dependency resolution is handled
+by GetPAN to avoid versioning issues with CPAN indexes.
 
-This allows it to work behind a HTTP proxy.
+### Hosting a DarkPAN (or CPAN/BackPAN mirror)
 
-It first indexes the authors, then packages, and finally downloads all packages to a local cache.
+Use [SmartPAN](smartpan/README.md) from any empty directory.
 
-**WARNING** It'll download approximately 20GB of data!
+Make sure you have Perl, Parse::LocalDistribution and JSON::XS installed.
 
-By default, pandex will index both CPAN and BackPAN. As soon as you specify a `-source` parameter, both
-CPAN and BackPAN indexes will be disabled. You can add them again by specifying `-cpan` and `-backpan`
+### Mirroring CPAN, BackPAN or any other DarkPAN index
 
-#### Command line options
+Use [Mirropan](mirropan/README.md) from any empty directory.
 
-| Option      | Example                                | Description
-| ---------   | -------                                | -----------
-| -h          | -h                                     | Display usage information
-| -backpan    | -backpan                               | Add the default BackPAN source (only required if using -source)
-| -cpan       | -cpan                                  | Add the default CPAN source (only required if using -source)
-| -loglevel   | -loglevel=TRACE                        | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
-| -source     | -source DarkPAN=http://path.to/darkpan | Adds a *PAN source to mirror
+You'll need around 40GB of free space to mirror CPAN and BackPAN.
 
-### cpanfile
+### Indexing a local mirror
 
-#### Basic syntax
+Use [PANdex](pandex/README.md) to index any local CPAN, DarkPAN or BackPAN mirror.
 
-Supports only basic cpanfile syntax:
+This can be used to generate an index file for a mirror created with [Mirropan](mirropan/README.md).
 
-	# Latest version
-    requires 'Module::Name';
-
-    # Minimum version
-    requires 'Module::Name', '1.02';
-    requires 'Module::Name', '>= 1.02';
-
-    # Exact version
-    requires 'Module::Name', '== 1.02';
-
-    # Maximum version
-    requires 'Module::Name', '<= 1.02';
-
-#### Additional dependencies
-
-If a module has a missing dependency which causes it to fail tests, you can fix it from the cpanfile
-using a custom syntax:
-
-    requires 'Broken::Module', '== 1.24'; # REQS: Missing::Dep-3.12; Another::Missing::Dep-1.82
-
-### get_backpan_index.sh
-
-Downloads the BackPAN index.
-
-Use this before running `gopan` if you want to include BackPAN sources.
-
-### Why?
+## Why?
 
 It's faster. And it gets dependencies right.
 
-And its written in Go - so no installation!
-
-#### With Carton
-
-    $ rm ./local -rf
-    $ PERL_CARTON_MIRROR=http://*****:5888 time carton
-    148 distributions installed
-    Installing modules failed
-
-    real    3m5.707s
-    user    1m52.291s
-    sys	    0m25.856s
-
-#### With GoPAN
-
-    $ rm ./local -rf
-    $ time gopan -cpan http://****:5888 -nevertest
-    [INFO] Successfully installed 258 modules
-
-    real    0m46.274s
-    user    3m35.914s
-    sys     0m31.583s
+It's also written in Go - so its highly portable with no installation!
 
 ## Contributing
 
-### get_perl_core.sh
+See the [Developing GoPAN](DEVELOPING.md) guide.
 
-Only required if building GoPAN from source.
-
-Builds the list of core perl modules and pragmas.
-
-These are added to perl_core.go, and are ignored when installing modules.
-
-Current perl_core.go is against perl 5.18.2.
-
-### To-do
-
-- Better cpanfile syntax support
-  - author path (A/AB/ABC/Some-Module-1.01.tar.gz)
-  - full URL (http://path.to/Some-Module-1.01.tar.gz)
-- BackPAN version lookup support
-  - multiple BackPAN indexes/URLs
-  - index BackPAN versions so "Some::Module-1.01" is found for "Some::Module >= 1.00"
-- Option to automatically download BackPAN index
-- gopan exec?
-
-### Pull requests
-
-Before submitting a pull request:
-
-  * Format your code: ```go fmt ./...```
-
-### Licence
+## Licence
 
 Copyright ©‎ 2014, Ian Kent (http://www.iankent.eu).
 
