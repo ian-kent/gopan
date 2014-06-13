@@ -12,6 +12,8 @@ Developing GoPAN
 Although GoPAN contains four tools (SmartPAN, GetPAN, MirroPAN and PANdex), GetPAN
 and PANdex are also independent Go libraries.
 
+| Library                        | Description
+| ------------------------------ | ------------------------------------------------------
 | [getpan/getpan](getpan/getpan) | Resolves cpanfile and module dependencies
 | [pandex/pandex](pandex/pandex) | Indexes modules and packages in a gopancache directory
 
