@@ -1,11 +1,11 @@
 package main
 
-import(
+import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
-	"os"
 	"io"
 	"net/http"
+	"os"
 )
 
 func mirrorPan() {

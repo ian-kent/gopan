@@ -1,16 +1,16 @@
 package main
 
 import (
+	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/gopan"
 	gotcha "github.com/ian-kent/gotcha/app"
 	"github.com/ian-kent/gotcha/events"
 	"github.com/ian-kent/gotcha/http"
-	"github.com/ian-kent/gopan/gopan"
-	"github.com/ian-kent/go-log/log"
-	"strings"
 	"html/template"
+	"strings"
 )
 
-func main() {	
+func main() {
 	configure()
 
 	indexes = gopan.LoadIndex(config.CacheDir + "/" + config.Index)
@@ -35,7 +35,7 @@ func main() {
 			}
 			mapped[idx.Name]["*"]["**"][auth.Name] = auth
 
-			// combos				
+			// combos
 			if _, ok := mapped[idx.Name][auth.Name[:1]]["**"]; !ok {
 				mapped[idx.Name][auth.Name[:1]]["**"] = make(map[string]*gopan.Author)
 			}
@@ -44,7 +44,7 @@ func main() {
 			}
 			mapped[idx.Name][auth.Name[:1]]["**"][auth.Name] = auth
 			mapped[idx.Name]["*"][auth.Name[:2]][auth.Name] = auth
-			
+
 			for _, pkg := range auth.Packages {
 				filemap[pkg.AuthorURL()] = idn
 				for _, prov := range pkg.Provides {
@@ -54,10 +54,10 @@ func main() {
 					if _, ok := packages[parts[0]]; !ok {
 						packages[parts[0]] = &PkgSpace{
 							Namespace: parts[0],
-							Packages: make([]*gopan.PerlPackage, 0),
-							Children: make(map[string]*PkgSpace),
-							Parent: nil,
-							Versions: make(map[float64]*gopan.PerlPackage),
+							Packages:  make([]*gopan.PerlPackage, 0),
+							Children:  make(map[string]*PkgSpace),
+							Parent:    nil,
+							Versions:  make(map[float64]*gopan.PerlPackage),
 						}
 					}
 					if _, ok := idxpackages[idx.Name]; !ok {
@@ -66,10 +66,10 @@ func main() {
 					if _, ok := idxpackages[idx.Name][parts[0]]; !ok {
 						idxpackages[idx.Name][parts[0]] = &PkgSpace{
 							Namespace: parts[0],
-							Packages: make([]*gopan.PerlPackage, 0),
-							Children: make(map[string]*PkgSpace),
-							Parent: nil,
-							Versions: make(map[float64]*gopan.PerlPackage),
+							Packages:  make([]*gopan.PerlPackage, 0),
+							Children:  make(map[string]*PkgSpace),
+							Parent:    nil,
+							Versions:  make(map[float64]*gopan.PerlPackage),
 						}
 					}
 					if len(parts) == 1 {

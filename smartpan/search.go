@@ -1,26 +1,27 @@
 package main
 
 import (
+	"github.com/ian-kent/gopan/gopan"
 	"github.com/ian-kent/gotcha/http"
+	"html/template"
+	"sort"
 	"strings"
 	"sync"
 	"time"
-	"github.com/ian-kent/gopan/gopan"
-	"sort"
-	"html/template"
 )
 
 type SearchResult struct {
-	Name string
-	Type string
-	URL string
-	Obj interface{}
+	Name  string
+	Type  string
+	URL   string
+	Obj   interface{}
 	Glyph string
 }
 
 type ByName []*SearchResult
-func (a ByName) Len() int { return len(a) }
-func (a ByName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+func (a ByName) Len() int           { return len(a) }
+func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 func search(session *http.Session) {
@@ -42,27 +43,27 @@ func search(session *http.Session) {
 				if strings.Contains(strings.ToLower(idx.Name), query) {
 					lock.Lock()
 					results = append(results, &SearchResult{
-						Name: idx.Name,
-						Type: "Index",
-						URL: idx.Name,
-						Obj: idx,
+						Name:  idx.Name,
+						Type:  "Index",
+						URL:   idx.Name,
+						Obj:   idx,
 						Glyph: "list",
 					})
 					lock.Unlock()
 				}
-				
+
 				for _, auth := range idx.Authors {
 					wg.Add(1)
 					go func(idx *gopan.Source, auth *gopan.Author) {
 						defer wg.Done()
-						
+
 						if strings.Contains(strings.ToLower(auth.Name), query) {
 							lock.Lock()
 							results = append(results, &SearchResult{
-								Name: auth.Name,
-								Type: "Author",
-								URL: idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name,
-								Obj: auth,
+								Name:  auth.Name,
+								Type:  "Author",
+								URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name,
+								Obj:   auth,
 								Glyph: "user",
 							})
 							lock.Unlock()
@@ -71,10 +72,10 @@ func search(session *http.Session) {
 							if strings.Contains(strings.ToLower(pkg.Name), query) {
 								lock.Lock()
 								results = append(results, &SearchResult{
-									Name: pkg.Name,
-									Type: "Module",
-									URL: idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
-									Obj: pkg,
+									Name:  pkg.Name,
+									Type:  "Module",
+									URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
+									Obj:   pkg,
 									Glyph: "compressed",
 								})
 								lock.Unlock()
@@ -83,10 +84,10 @@ func search(session *http.Session) {
 								if strings.Contains(strings.ToLower(prov.Name), query) {
 									lock.Lock()
 									results = append(results, &SearchResult{
-										Name: prov.Name,
-										Type: "Package",
-										URL: idx.Name + "/modules/" + strings.Replace(prov.Name, "::", "/", -1),
-										Obj: prov,
+										Name:  prov.Name,
+										Type:  "Package",
+										URL:   idx.Name + "/modules/" + strings.Replace(prov.Name, "::", "/", -1),
+										Obj:   prov,
 										Glyph: "briefcase",
 									})
 									lock.Unlock()

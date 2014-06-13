@@ -7,8 +7,8 @@ import (
 type Config struct {
 	LogLevel string
 	CacheDir string
-	Index string
-	Bind string
+	Index    string
+	Bind     string
 }
 
 var config *Config
@@ -31,7 +31,7 @@ func configure() {
 	config = &Config{
 		LogLevel: loglevel,
 		CacheDir: cachedir,
-		Index: index,
-		Bind: bind,
+		Index:    index,
+		Bind:     bind,
 	}
 }

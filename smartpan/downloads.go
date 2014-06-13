@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/ian-kent/gotcha/http"
 	"github.com/ian-kent/go-log/log"
-    "os"
-    "io/ioutil"
+	"github.com/ian-kent/gotcha/http"
+	"io/ioutil"
+	"os"
 )
 
 func download(session *http.Session) {

@@ -2,6 +2,7 @@ package getpan
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ian-kent/go-log/log"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"encoding/json"
 )
 
 // Matches cpan 02packages.details.txt format
@@ -28,15 +28,15 @@ type Source struct {
 
 // FIXME same structs in both smartpan and getpan
 type VersionOutput struct {
-	Path string
-	URL string
-	Index string
+	Path    string
+	URL     string
+	Index   string
 	Version float64
 }
 
 type WhereOutput struct {
-	Module string
-	Latest float64	
+	Module   string
+	Latest   float64
 	Versions []*VersionOutput
 }
 
@@ -55,7 +55,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 	switch s.Type {
 	case "SmartPAN":
 		log.Debug("=> Using SmartPAN source")
-		
+
 		url := s.URL + "/where/" + d.Name + "/" + d.Modifier + d.Version
 		log.Info("Query: %s", url)
 		res, err := http.Get(url)
@@ -94,7 +94,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 			if ver.Version == v.Latest {
 				log.Info("Using latest version of %s: %f", v.Module, ver.Version)
 				lv = ver
-				break;
+				break
 			}
 		}
 		if lv == nil {
@@ -103,10 +103,10 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		}
 
 		return &Module{
-			Name: d.Name,
+			Name:    d.Name,
 			Version: fmt.Sprintf("%f", lv.Version),
-			Source: s,
-			Url: lv.URL,
+			Source:  s,
+			Url:     lv.URL,
 		}, nil
 	case "CPAN":
 		log.Debug("=> Using CPAN source")

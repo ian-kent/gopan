@@ -1,8 +1,8 @@
 package main
 
-import(
-	"github.com/ian-kent/gopan/getpan/getpan"
+import (
 	"fmt"
+	"github.com/ian-kent/gopan/getpan/getpan"
 	"strings"
 )
 
@@ -11,7 +11,7 @@ func getpan_import(job *ImportJob, msg func(string)) (*getpan.CPANFile, []*getpa
 
 	if len(job.Form.CPANMirror) > 0 {
 		msg("Adding CPAN mirror: " + job.Form.CPANMirror)
-		config.Sources = append(config.Sources, getpan.NewSource("CPAN", job.Form.CPANMirror + "/modules/02packages.details.txt.gz", job.Form.CPANMirror))
+		config.Sources = append(config.Sources, getpan.NewSource("CPAN", job.Form.CPANMirror+"/modules/02packages.details.txt.gz", job.Form.CPANMirror))
 	}
 
 	defer func(job *ImportJob) {
@@ -65,7 +65,7 @@ func PrintCPANFile(job *ImportJob, deps *getpan.CPANFile, d int, msg func(string
 			msg(m)
 			continue
 		}
-		PrintModDeps(job, dep.Module, d + 1, msg, modules)
+		PrintModDeps(job, dep.Module, d+1, msg, modules)
 	}
 }
 
@@ -76,7 +76,7 @@ func PrintDeps(job *ImportJob, deps *getpan.DependencyList, d int, msg func(stri
 			msg(m)
 			continue
 		}
-		PrintModDeps(job, dep.Module, d + 1, msg, modules)
+		PrintModDeps(job, dep.Module, d+1, msg, modules)
 	}
 }
 
@@ -86,6 +86,6 @@ func PrintModDeps(job *ImportJob, m *getpan.Module, d int, msg func(string), mod
 	msg(ms)
 
 	if m.Deps != nil {
-		PrintDeps(job, m.Deps, d + 1, msg, modules)
+		PrintDeps(job, m.Deps, d+1, msg, modules)
 	}
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ian-kent/gopan/gopan"
 	"flag"
+	"github.com/ian-kent/gopan/gopan"
 )
 
 type Config struct {
@@ -44,12 +44,12 @@ func configure() {
 	flag.Parse()
 
 	config = &Config{
-		Sources: sources,
-		NoCache: nocache,
-		Update: update,
+		Sources:  sources,
+		NoCache:  nocache,
+		Update:   update,
 		NoMirror: nomirror,
-		CPAN: cpan,
-		BackPAN: backpan,
+		CPAN:     cpan,
+		BackPAN:  backpan,
 		LogLevel: loglevel,
 		CacheDir: cachedir,
 	}

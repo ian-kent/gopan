@@ -93,5 +93,5 @@ func ParseCPANLines(lines []string) (*CPANFile, error) {
 
 	log.Info("Found %d dependencies in cpanfile", len(cpanfile.Dependencies))
 
-	return cpanfile, nil	
+	return cpanfile, nil
 }

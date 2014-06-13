@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/ian-kent/gotcha/http"
 	"fmt"
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gotcha/http"
 	"strconv"
 )
 
@@ -33,7 +33,7 @@ func pkgindex(session *http.Session) {
 
 	if _, ok := indexes[repo]; !ok && repo != "SmartPAN" {
 		session.RenderNotFound()
-		return	
+		return
 	}
 
 	if g, ok := session.Stash["gz"]; ok {

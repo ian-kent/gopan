@@ -1,25 +1,25 @@
 package gopan
 
-import(
-	"strconv"
-	"regexp"
+import (
 	"github.com/ian-kent/go-log/log"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
 type Package struct {
-	Author *Author
-	Name   string
-	URL    string
-	Provides map[string]*PerlPackage
+	Author    *Author
+	Name      string
+	URL       string
+	Provides  map[string]*PerlPackage
 	cachedVer float64
 }
 
 type PerlPackage struct {
 	Package *Package
-	Name string
+	Name    string
 	Version string
-	File string
+	File    string
 }
 
 func (p *Package) String() string {
@@ -35,6 +35,7 @@ func (p *Package) AuthorURL() string {
 }
 
 var fnToVer = regexp.MustCompile("(.*)-([v_\\-\\.0-9a-zA-Z]*).tar.gz")
+
 func (p *Package) Version() float64 {
 	if p.cachedVer > 0 {
 		return p.cachedVer
@@ -49,7 +50,7 @@ func (p *Package) Version() float64 {
 				log.Trace("No version cached, using first version found [%s] from [%s]", prov.Version, prov.Name)
 				v = prov.Version
 			} else {
-				if p.Name == strings.Replace(prov.Name, "::", "-", -1) + "-" + prov.Version {
+				if p.Name == strings.Replace(prov.Name, "::", "-", -1)+"-"+prov.Version {
 					log.Trace("Version cached but found better match, using [%s] from [%s]", prov.Version, prov.Name)
 					v = prov.Version
 				}

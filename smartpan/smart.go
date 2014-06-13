@@ -1,25 +1,25 @@
 package main
 
 import (
-	"github.com/ian-kent/gotcha/http"
+	"encoding/json"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/getpan/getpan"
 	"github.com/ian-kent/gopan/gopan"
+	"github.com/ian-kent/gotcha/http"
 	"strings"
-	"encoding/json"
 )
 
 // FIXME same structs in both smartpan and getpan
 type VersionOutput struct {
-	Path string
-	URL string
-	Index string
+	Path    string
+	URL     string
+	Index   string
 	Version float64
 }
 
 type WhereOutput struct {
-	Module string
-	Latest float64	
+	Module   string
+	Latest   float64
 	Versions []*VersionOutput
 }
 
@@ -27,28 +27,28 @@ func where(session *http.Session) {
 	module := session.Stash["module"].(string)
 	log.Info("Looking for module: %s", module)
 
-    ns := strings.Split(module, "::")
-    if _, ok := packages[ns[0]]; !ok {
-        log.Info("Top-level namespace [%s] not found", ns[0])
+	ns := strings.Split(module, "::")
+	if _, ok := packages[ns[0]]; !ok {
+		log.Info("Top-level namespace [%s] not found", ns[0])
 		session.Response.Status = 404
 		session.Response.Send()
 		return
 	}
 
-    mod := packages[ns[0]]
+	mod := packages[ns[0]]
 
-    ns = ns[1:]
-    for len(ns) > 0 {
-        if _, ok := mod.Children[ns[0]]; !ok {
-                log.Info("Child namespace [%s] not found", ns[0])
-                session.Response.Status = 404
-                session.Response.Send()
-                return
-        }
-        log.Info("Found child namespace [%s]", ns[0])
-        mod = mod.Children[ns[0]]
-        ns = ns[1:]
-    }
+	ns = ns[1:]
+	for len(ns) > 0 {
+		if _, ok := mod.Children[ns[0]]; !ok {
+			log.Info("Child namespace [%s] not found", ns[0])
+			session.Response.Status = 404
+			session.Response.Send()
+			return
+		}
+		log.Info("Found child namespace [%s]", ns[0])
+		mod = mod.Children[ns[0]]
+		ns = ns[1:]
+	}
 
 	var version string
 	if _, ok := session.Stash["version"]; ok {
@@ -63,7 +63,7 @@ func where(session *http.Session) {
 		log.Info("Module has no versions in index")
 		session.Response.Status = 404
 		session.Response.Send()
-		return	
+		return
 	}
 
 	versions := make([]*VersionOutput, 0)
@@ -74,13 +74,15 @@ func where(session *http.Session) {
 			log.Info("Matching [%s] against md.Version [%s], md.Package.Version [%f]", dep.Version, md.Version, md.Package.Version())
 			if dep.MatchesVersion(md.Version) {
 				vout := &VersionOutput{
-					Index: md.Package.Author.Source.Name,
-					URL: md.Package.VirtualURL(),
-					Path: md.Package.AuthorURL(),
+					Index:   md.Package.Author.Source.Name,
+					URL:     md.Package.VirtualURL(),
+					Path:    md.Package.AuthorURL(),
 					Version: gopan.VersionFromString(md.Version),
 				}
 				versions = append(versions, vout)
-				if v > lv { lv = v }
+				if v > lv {
+					lv = v
+				}
 			}
 		}
 
@@ -94,20 +96,22 @@ func where(session *http.Session) {
 		for v, pkg := range mod.Versions {
 			log.Info("Found version: %f", v)
 			versions = append(versions, &VersionOutput{
-				Index: pkg.Package.Author.Source.Name,
-				URL: pkg.Package.VirtualURL(),
-				Path: pkg.Package.AuthorURL(),
+				Index:   pkg.Package.Author.Source.Name,
+				URL:     pkg.Package.VirtualURL(),
+				Path:    pkg.Package.AuthorURL(),
 				Version: gopan.VersionFromString(pkg.Version),
 			})
-			if v > lv { lv = v }
+			if v > lv {
+				lv = v
+			}
 		}
 	}
 
 	session.Response.Headers.Set("Content-Type", "application/json")
-	
+
 	o := &WhereOutput{
-		Module: mod.FullName(),
-		Latest: lv,
+		Module:   mod.FullName(),
+		Latest:   lv,
 		Versions: versions,
 	}
 

@@ -29,9 +29,9 @@ func configure() {
 	flag.Parse()
 
 	config = &Config{
-		Update: update,
+		Update:   update,
 		LogLevel: loglevel,
 		CacheDir: cachedir,
-		ExtDir: extdir,
+		ExtDir:   extdir,
 	}
 }

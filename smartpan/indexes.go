@@ -1,8 +1,8 @@
 package main
 
-import(
-	"github.com/ian-kent/gopan/gopan"
+import (
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/gopan"
 )
 
 // GoPAN indexes - CPAN, BackPAN etc
@@ -21,10 +21,10 @@ var filemap = make(map[string]string)
 // Represents a partial namespace (e.g. 'Mojolicious' and 'Mojolicious'->'Command' for Mojolicious::Command)
 type PkgSpace struct {
 	Namespace string
-	Packages []*gopan.PerlPackage
-	Children map[string]*PkgSpace
-	Parent   *PkgSpace
-	Versions map[float64]*gopan.PerlPackage
+	Packages  []*gopan.PerlPackage
+	Children  map[string]*PkgSpace
+	Parent    *PkgSpace
+	Versions  map[float64]*gopan.PerlPackage
 }
 
 // Returns the full package name
@@ -61,10 +61,10 @@ func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 		if _, ok := p.Children[parts[0]]; !ok {
 			p.Children[parts[0]] = &PkgSpace{
 				Namespace: parts[0],
-				Packages: make([]*gopan.PerlPackage, 0),
-				Children: make(map[string]*PkgSpace),
-				Parent: p,
-				Versions: make(map[float64]*gopan.PerlPackage),
+				Packages:  make([]*gopan.PerlPackage, 0),
+				Children:  make(map[string]*PkgSpace),
+				Parent:    p,
+				Versions:  make(map[float64]*gopan.PerlPackage),
 			}
 		}
 		if len(parts) == 1 {
@@ -78,9 +78,10 @@ func (p *PkgSpace) Populate(parts []string, pkg *gopan.PerlPackage) {
 }
 
 type Summary struct {
-	Sources int
-	Authors int
-	Modules int
+	Sources  int
+	Authors  int
+	Modules  int
 	Packages int
 }
+
 var summary *Summary

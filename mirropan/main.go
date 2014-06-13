@@ -77,9 +77,8 @@ func main() {
 		os.MkdirAll(".gopancache", 0777)
 
 		if !config.NoCache {
-			gopan.SaveIndex(config.CacheDir + "/index", indexes)
+			gopan.SaveIndex(config.CacheDir+"/index", indexes)
 		}
-		
 
 		if config.Update {
 			log.Info("Found %d new packages by %d new authors", newAuthors, newPackages)

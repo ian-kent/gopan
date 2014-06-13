@@ -1,46 +1,47 @@
 package main
 
 import (
-	"github.com/ian-kent/gotcha/http"
-	"github.com/ian-kent/gotcha/form"
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/getpan/getpan"
 	"github.com/ian-kent/gopan/gopan"
 	"github.com/ian-kent/gopan/pandex/pandex"
-	"github.com/ian-kent/gopan/getpan/getpan"
-	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gotcha/form"
+	"github.com/ian-kent/gotcha/http"
 	"html/template"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	nethttp "net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
-	"errors"
-	"crypto/rand" 
-    "encoding/base64" 
-    "net/url"
-    "sync"
-    "path/filepath"
-    "os"
-    "io"
-    nethttp "net/http"
-    "mime/multipart"
-    "io/ioutil"
+	"sync"
 )
 
 type ImportForm struct {
 	ImportInto string `minlength: 1`
-	NewIndex string
-	Cpanfile string
-	ImportURL string
-	FromFile string
-	FromDir string
-	AuthorID string
+	NewIndex   string
+	Cpanfile   string
+	ImportURL  string
+	FromFile   string
+	FromDir    string
+	AuthorID   string
 	CPANMirror string
 }
 
 type ImportJob struct {
-	Form *ImportForm
+	Form     *ImportForm
 	Complete bool
-	Id string
+	Id       string
 	Watchers []func(string)
-	History []string
-	Deps *getpan.CPANFile
+	History  []string
+	Deps     *getpan.CPANFile
 }
+
 var imports = make(map[string]*ImportJob)
 
 func import1(session *http.Session) {
@@ -51,7 +52,7 @@ func import1(session *http.Session) {
 	f := form.New(session, m)
 	session.Stash["fh"] = f
 
-	if session.Request.Method != "POST" {		
+	if session.Request.Method != "POST" {
 		render_import(session)
 		return
 	}
@@ -83,9 +84,9 @@ func import1(session *http.Session) {
 	en.Encode(d, b)
 
 	job := &ImportJob{
-		Form: m,
+		Form:     m,
 		Complete: false,
-		Id: string(d),
+		Id:       string(d),
 		Watchers: make([]func(string), 0),
 	}
 
@@ -112,7 +113,7 @@ func do_import(session *http.Session, job *ImportJob) {
 	}
 
 	msg := func(m string) {
-		if m != ":DONE" { 
+		if m != ":DONE" {
 			job.History = append(job.History, m)
 			log.Info(m)
 		}
@@ -143,7 +144,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			msg("Author ID must be at least 3 characters")
 			msg(":DONE")
 			job.Complete = true
-			return;
+			return
 		}
 
 		npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
@@ -159,7 +160,7 @@ func do_import(session *http.Session, job *ImportJob) {
 				msg(err.Error())
 				msg(":DONE")
 				job.Complete = true
-				return;
+				return
 			}
 
 			url := job.Form.ImportURL
@@ -170,7 +171,7 @@ func do_import(session *http.Session, job *ImportJob) {
 				msg(err.Error())
 				msg(":DONE")
 				job.Complete = true
-				return;
+				return
 			}
 
 			_, err = io.Copy(out, resp.Body)
@@ -178,7 +179,7 @@ func do_import(session *http.Session, job *ImportJob) {
 				msg(err.Error())
 				msg(":DONE")
 				job.Complete = true
-				return;
+				return
 			}
 
 			out.Close()
@@ -194,15 +195,15 @@ func do_import(session *http.Session, job *ImportJob) {
 
 		s := getpan.NewSource("CPAN", "/modules/02packages.details.txt.gz", "")
 		m := &getpan.Module{
-			Source: s,
-			Name: name,
+			Source:  s,
+			Name:    name,
 			Version: version,
-			Url: "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
-			Cached: nfile,
-			Dir: npath,
+			Url:     "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
+			Cached:  nfile,
+			Dir:     npath,
 		}
 		m.Deps = &getpan.DependencyList{
-			Parent: m,
+			Parent:       m,
 			Dependencies: make([]*getpan.Dependency, 0),
 		}
 		mods = append(mods, m)
@@ -220,7 +221,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			msg("Author ID must be at least 3 characters")
 			msg(":DONE")
 			job.Complete = true
-			return;
+			return
 		}
 
 		npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
@@ -234,7 +235,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			msg(err.Error())
 			msg(":DONE")
 			job.Complete = true
-			return;
+			return
 		}
 
 		fn = strings.TrimSuffix(fn, ".tar.gz")
@@ -244,21 +245,21 @@ func do_import(session *http.Session, job *ImportJob) {
 
 		s := getpan.NewSource("CPAN", "/modules/02packages.details.txt.gz", "")
 		m := &getpan.Module{
-			Source: s,
-			Name: name,
+			Source:  s,
+			Name:    name,
 			Version: version,
-			Url: "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
-			Cached: nfile,
-			Dir: npath,
+			Url:     "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
+			Cached:  nfile,
+			Dir:     npath,
 		}
 		m.Deps = &getpan.DependencyList{
-			Parent: m,
+			Parent:       m,
 			Dependencies: make([]*getpan.Dependency, 0),
 		}
 		mods = append(mods, m)
 	}
 
-	if f, fh, err := session.Request.File("fromfile"); err == nil {	
+	if f, fh, err := session.Request.File("fromfile"); err == nil {
 		fn := fh.Filename
 
 		msg("Importing from uploaded module/cpanfile: " + fn)
@@ -287,7 +288,7 @@ func do_import(session *http.Session, job *ImportJob) {
 				msg("Author ID must be at least 3 characters")
 				msg(":DONE")
 				job.Complete = true
-				return;
+				return
 			}
 
 			npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
@@ -301,7 +302,7 @@ func do_import(session *http.Session, job *ImportJob) {
 				msg(err.Error())
 				msg(":DONE")
 				job.Complete = true
-				return;
+				return
 			}
 
 			fn = strings.TrimSuffix(fn, ".tar.gz")
@@ -311,15 +312,15 @@ func do_import(session *http.Session, job *ImportJob) {
 
 			s := getpan.NewSource("CPAN", "/modules/02packages.details.txt.gz", "")
 			m := &getpan.Module{
-				Source: s,
-				Name: name,
+				Source:  s,
+				Name:    name,
 				Version: version,
-				Url: "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
-				Cached: nfile,
-				Dir: npath,
+				Url:     "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth + "/" + fn,
+				Cached:  nfile,
+				Dir:     npath,
 			}
 			m.Deps = &getpan.DependencyList{
-				Parent: m,
+				Parent:       m,
 				Dependencies: make([]*getpan.Dependency, 0),
 			}
 			mods = append(mods, m)
@@ -346,7 +347,7 @@ func do_import(session *http.Session, job *ImportJob) {
 		auth := dnb[len(dnb)-1]
 		ndir := config.CacheDir + "/" + reponame + "/" + auth[:1] + "/" + auth[:2] + "/" + auth
 		npath := ndir + "/" + fn
-		
+
 		if _, err := os.Stat(npath); err == nil {
 			msg(" | Already exists in repository")
 		} else {
@@ -356,15 +357,15 @@ func do_import(session *http.Session, job *ImportJob) {
 			_, err := CopyFile(npath, m.Cached)
 			if err != nil {
 				msg(" ! " + err.Error())
-				continue;
+				continue
 			}
 		}
 
 		if _, ok := indexes[reponame]; !ok {
 			msg(" | Creating index: " + reponame)
 			indexes[reponame] = &gopan.Source{
-				Name: reponame,
-				URL: "/authors/id",
+				Name:    reponame,
+				URL:     "/authors/id",
 				Authors: make(map[string]*gopan.Author),
 			}
 
@@ -374,10 +375,10 @@ func do_import(session *http.Session, job *ImportJob) {
 		if _, ok := indexes[reponame].Authors[auth]; !ok {
 			msg(" | Creating author: " + auth)
 			author := &gopan.Author{
-					Source: indexes[reponame],
-					Name: auth,
-					Packages: make(map[string]*gopan.Package),
-					URL: "/authors/id/" + auth[:1] + "/" + auth[:2] + "/" + auth + "/",
+				Source:   indexes[reponame],
+				Name:     auth,
+				Packages: make(map[string]*gopan.Package),
+				URL:      "/authors/id/" + auth[:1] + "/" + auth[:2] + "/" + auth + "/",
 			}
 			indexes[reponame].Authors[auth] = author
 
@@ -399,7 +400,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			}
 			mapped[reponame]["*"]["**"][author.Name] = author
 
-			// combos				
+			// combos
 			if _, ok := mapped[reponame][author.Name[:1]]["**"]; !ok {
 				mapped[reponame][author.Name[:1]]["**"] = make(map[string]*gopan.Author)
 			}
@@ -413,16 +414,16 @@ func do_import(session *http.Session, job *ImportJob) {
 		if _, ok := indexes[reponame].Authors[auth].Packages[fn]; !ok {
 			msg(" | Creating module: " + fn)
 			indexes[reponame].Authors[auth].Packages[fn] = &gopan.Package{
-					Author: indexes[reponame].Authors[auth],
-					Name: fn,
-					URL: indexes[reponame].Authors[auth].URL + fn,
-					Provides: make(map[string]*gopan.PerlPackage),
+				Author:   indexes[reponame].Authors[auth],
+				Name:     fn,
+				URL:      indexes[reponame].Authors[auth].URL + fn,
+				Provides: make(map[string]*gopan.PerlPackage),
 			}
 
 			msg(" | Getting list of packages")
 			modnm := strings.TrimSuffix(fn, ".tar.gz")
 			pkg := indexes[reponame].Authors[auth].Packages[fn]
-			pandex.Provides(pkg, npath, ndir + "/" + modnm, ndir)
+			pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir)
 
 			//pkg := indexes[reponame].Authors[auth].Packages[fn]
 			msg(" | Adding packages to index")
@@ -435,19 +436,19 @@ func do_import(session *http.Session, job *ImportJob) {
 				if _, ok := packages[parts[0]]; !ok {
 					packages[parts[0]] = &PkgSpace{
 						Namespace: parts[0],
-						Packages: make([]*gopan.PerlPackage, 0),
-						Children: make(map[string]*PkgSpace),
-						Parent: nil,
-						Versions: make(map[float64]*gopan.PerlPackage),
+						Packages:  make([]*gopan.PerlPackage, 0),
+						Children:  make(map[string]*PkgSpace),
+						Parent:    nil,
+						Versions:  make(map[float64]*gopan.PerlPackage),
 					}
 				}
 				if _, ok := idxpackages[reponame][parts[0]]; !ok {
 					idxpackages[reponame][parts[0]] = &PkgSpace{
 						Namespace: parts[0],
-						Packages: make([]*gopan.PerlPackage, 0),
-						Children: make(map[string]*PkgSpace),
-						Parent: nil,
-						Versions: make(map[float64]*gopan.PerlPackage),
+						Packages:  make([]*gopan.PerlPackage, 0),
+						Children:  make(map[string]*PkgSpace),
+						Parent:    nil,
+						Versions:  make(map[float64]*gopan.PerlPackage),
 					}
 				}
 				if len(parts) == 1 {
@@ -462,7 +463,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			}
 
 			msg(" | Writing to index file")
-			gopan.AppendToIndex(config.CacheDir + "/" + config.Index, indexes[reponame], indexes[reponame].Authors[auth], indexes[reponame].Authors[auth].Packages[fn])
+			gopan.AppendToIndex(config.CacheDir+"/"+config.Index, indexes[reponame], indexes[reponame].Authors[auth], indexes[reponame].Authors[auth].Packages[fn])
 		}
 
 		msg(" | Imported module")
@@ -477,32 +478,32 @@ func do_import(session *http.Session, job *ImportJob) {
 }
 
 func CopyToFile(dstName string, file multipart.File) (written int64, err error) {
-    dst, err := os.Create(dstName)
-    if err != nil {
-        return
-    }
+	dst, err := os.Create(dstName)
+	if err != nil {
+		return
+	}
 
-    written, err = io.Copy(dst, file)
+	written, err = io.Copy(dst, file)
 
-    dst.Close()
-    return
+	dst.Close()
+	return
 }
 
 func CopyFile(dstName, srcName string) (written int64, err error) {
-    src, err := os.Open(srcName)
-    if err != nil {
-        return
-    }
+	src, err := os.Open(srcName)
+	if err != nil {
+		return
+	}
 
-    dst, err := os.Create(dstName)
-    if err != nil {
-        return
-    }
+	dst, err := os.Create(dstName)
+	if err != nil {
+		return
+	}
 
-    written, err = io.Copy(dst, src)
-    dst.Close()
-    src.Close()
-    return
+	written, err = io.Copy(dst, src)
+	dst.Close()
+	src.Close()
+	return
 }
 
 func render_import(session *http.Session) {
@@ -513,7 +514,7 @@ func render_import(session *http.Session) {
 }
 
 func import2(session *http.Session) {
-	
+
 	session.Stash["Page"] = "Import"
 	session.Stash["Title"] = "Import job " + session.Stash["jobid"].(string)
 
@@ -549,7 +550,7 @@ func importstream(session *http.Session) {
 				return
 			}
 			c <- []byte(m + "<br />\n")
-		});
+		})
 	}
 
 	wg.Wait()

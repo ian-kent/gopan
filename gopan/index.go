@@ -1,11 +1,11 @@
 package gopan
 
-import(
-	"os"
+import (
 	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
-	"strings"
+	"os"
 	"regexp"
+	"strings"
 )
 
 func CountIndex(indexes map[string]*Source) (int, int, int, int) {
@@ -100,10 +100,10 @@ func LoadIndex(index string) map[string]*Source {
 			match := reprovides.FindStringSubmatch(l)
 			if len(match) > 0 {
 				cpkg.Provides[match[1]] = &PerlPackage{
-					Name: match[1],
+					Name:    match[1],
 					Version: match[2],
 					Package: cpkg,
-					File: match[3],
+					File:    match[3],
 				}
 			}
 		} else if strings.HasPrefix(l, "  ") {
@@ -118,9 +118,9 @@ func LoadIndex(index string) map[string]*Source {
 					continue
 				}
 				cpkg = &Package{
-					Name: match[1],
-					URL: match[2],
-					Author: cauth,
+					Name:     match[1],
+					URL:      match[2],
+					Author:   cauth,
 					Provides: make(map[string]*PerlPackage),
 				}
 				cauth.Packages[match[1]] = cpkg
@@ -137,9 +137,9 @@ func LoadIndex(index string) map[string]*Source {
 					continue
 				}
 				cauth = &Author{
-					Name: match[1],
-					URL: match[2],
-					Source: csource,
+					Name:     match[1],
+					URL:      match[2],
+					Source:   csource,
 					Packages: make(map[string]*Package, 0),
 				}
 				csource.Authors[match[1]] = cauth
@@ -156,15 +156,15 @@ func LoadIndex(index string) map[string]*Source {
 						log.Trace("Seen this source before: %s", idx.Name)
 						csource = idx
 						seen = true
-						break;
+						break
 					}
 				}
 				if seen {
 					continue
 				}
 				csource = &Source{
-					Name: match[1],
-					URL: match[2],
+					Name:    match[1],
+					URL:     match[2],
 					Authors: make(map[string]*Author, 0),
 				}
 				indexes[csource.Name] = csource

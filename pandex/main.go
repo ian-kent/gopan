@@ -4,9 +4,9 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
 	"github.com/ian-kent/gopan/pandex/pandex"
-	"sync"
 	"os"
 	"strings"
+	"sync"
 )
 
 var wg = new(sync.WaitGroup)
@@ -32,8 +32,8 @@ func main() {
 	}
 
 	for _, idx := range indexes {
-		log.Debug("Index: %s", idx)		
-		for _, auth := range idx.Authors {			
+		log.Debug("Index: %s", idx)
+		for _, auth := range idx.Authors {
 			log.Debug("Author %s", auth)
 			for _, pkg := range auth.Packages {
 				wg.Add(1)
@@ -51,7 +51,7 @@ func main() {
 
 					if _, err := os.Stat(tgzpath); err != nil {
 						log.Error("File not found: %s", tgzpath)
-						return;
+						return
 					}
 
 					extpath := config.ExtDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + modnm
@@ -66,7 +66,7 @@ func main() {
 					npkg += len(pkg.Provides)
 					nmod += 1
 
-					if nmod > 0 && nmod % 100 == 0 {
+					if nmod > 0 && nmod%100 == 0 {
 						log.Info("%f%% Done %d/%d packages (%d provided so far)", pc(), nmod, tpkg, npkg)
 					}
 

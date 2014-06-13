@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ian-kent/gotcha/http"
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gotcha/http"
 	"html/template"
 	"strings"
 )
@@ -15,7 +15,7 @@ func toplevelRepo() map[string]map[string]string {
 			"Name": pos,
 			"Path": "/" + pos,
 		}
-	}	
+	}
 	dirs["SmartPAN"] = map[string]string{
 		"Name": "SmartPAN",
 		"Path": "/SmartPAN",
@@ -46,19 +46,19 @@ func tlRepo2(idx string, tl string) (map[string]map[string]string, map[string]ma
 
 	if tl == "modules" {
 		files["02packages.details.txt"] = map[string]string{
-			"Name": "02packages.details.txt",
-			"Path": "/" + idx + "/modules/02packages.details.txt",
+			"Name":  "02packages.details.txt",
+			"Path":  "/" + idx + "/modules/02packages.details.txt",
 			"Glyph": "compressed",
 		}
 		files["02packages.details.txt.gz"] = map[string]string{
-			"Name": "02packages.details.txt.gz",
-			"Path": "/" + idx + "/modules/02packages.details.txt.gz",
+			"Name":  "02packages.details.txt.gz",
+			"Path":  "/" + idx + "/modules/02packages.details.txt.gz",
 			"Glyph": "compressed",
 		}
 		for k, _ := range packages {
 			files[k] = map[string]string{
-				"Name": k,
-				"Path": "/" + idx + "/modules/" + k,
+				"Name":  k,
+				"Path":  "/" + idx + "/modules/" + k,
 				"Glyph": "briefcase",
 			}
 		}
@@ -170,8 +170,8 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 				for author, auth := range mapped[idx][fl][sl] {
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
-							"Name": pos,
-							"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+							"Name":  pos,
+							"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 							"Glyph": "compressed",
 						}
 					}
@@ -180,8 +180,8 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 				if auth, ok := mapped[idx][fl][sl][author]; ok {
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
-							"Name": pos,
-							"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+							"Name":  pos,
+							"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 							"Glyph": "compressed",
 						}
 					}
@@ -193,8 +193,8 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 			for author, _ := range mapped[idx][fl][sl] {
 				for pos, _ := range mapped[idx][fl][sl][author].Packages {
 					files[pos] = map[string]string{
-						"Name": pos,
-						"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+						"Name":  pos,
+						"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 						"Glyph": "compressed",
 					}
 				}
@@ -202,8 +202,8 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 		} else {
 			for pos, _ := range mapped[idx][fl][sl][author].Packages {
 				files[pos] = map[string]string{
-					"Name": pos,
-					"Path": "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+					"Name":  pos,
+					"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
 					"Glyph": "compressed",
 				}
 			}
@@ -335,7 +335,7 @@ func browse(session *http.Session) {
 	if len(pp) > 0 && len(pp[0]["Name"]) > 0 {
 		session.Stash["PathBits"] = pp
 	}
-	
+
 	html, _ := session.RenderTemplate("browse.html")
 
 	session.Stash["Page"] = "Browse"
