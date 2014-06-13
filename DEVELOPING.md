@@ -22,6 +22,8 @@ and PANdex are also independent Go libraries.
 If you want to change the version of Perl supported by GoPAN, run `./get_perl_core.sh`
 to update `getpan/getpan/perl_core.go`.
 
+You'll need Mojolicious and Perl installed.
+
 It is currently built against Perl 5.18.2.
 
 `perl_core.go` is used to exclude Perl core modules from the dependency tree built
