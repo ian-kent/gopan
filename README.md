@@ -8,10 +8,13 @@ Mirrors hosted by [SmartPAN](smartpan/README.md) are fully Carton/cpanm compatib
 but also support the `SmartPAN` interface used by [GetPAN](getpan/README.md).
 
 [GetPAN](getpan/README.md) is also Carton/cpanm compatible and works with CPAN, BackPAN,
-and DarkPAN mirrors using Pinto and Orepan. When used with [SmartPAN](smartpan/README.md),
+and DarkPAN mirrors using Pinto and Orepan. 
+
+When used with [SmartPAN](smartpan/README.md),
 the `SmartPAN` interface fixes dependency resolution issues which exist with typical CPAN 
 indexes.
 
+| ------------------------------ | -----------------------------------------------
 | [SmartPAN](smartpan/README.md) | Host a DarkPAN, BackPAN or CPAN mirror
 | [GetPAN](getpan/README.md)     | Carton/cpanfile compatible dependency installer
 | [MirroPAN](mirropan/README.md) | CPAN/BackPAN brute-force mirroring
