@@ -48,7 +48,7 @@ Make sure you have Perl, Parse::LocalDistribution and JSON::XS installed.
 
 ### Mirroring CPAN, BackPAN or any other DarkPAN index
 
-Use [Mirropan](mirropan/README.md) from any empty directory.
+Use [MirroPAN](mirropan/README.md) from any empty directory.
 
 You'll need around 40GB of free space to mirror CPAN and BackPAN.
 
@@ -56,7 +56,7 @@ You'll need around 40GB of free space to mirror CPAN and BackPAN.
 
 Use [PANdex](pandex/README.md) to index any local CPAN, DarkPAN or BackPAN mirror.
 
-This can be used to generate an index file for a mirror created with [Mirropan](mirropan/README.md).
+This can be used to generate an index file for a mirror created with [MirroPAN](mirropan/README.md).
 
 ## Why?
 
