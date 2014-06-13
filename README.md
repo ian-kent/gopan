@@ -14,6 +14,7 @@ When used with [SmartPAN](smartpan/README.md),
 the `SmartPAN` interface fixes dependency resolution issues which exist with typical CPAN 
 indexes.
 
+| Application                    | Description
 | ------------------------------ | -----------------------------------------------
 | [SmartPAN](smartpan/README.md) | Host a DarkPAN, BackPAN or CPAN mirror
 | [GetPAN](getpan/README.md)     | Carton/cpanfile compatible dependency installer
