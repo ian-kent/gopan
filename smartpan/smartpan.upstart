@@ -1,0 +1,13 @@
+# SmartPAN (Upstart unit)
+description "SmartPAN"
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop on runlevel [06]
+
+env SMARTPAN=/usr/bin/smartpan
+
+# SmartPAN emits log messages to stdout, and upstart will write that to
+# /var/log/upstart/smartpan.log
+exec $SMARTPAN
+
+respawn
+respawn limit 10 10
