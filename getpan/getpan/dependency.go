@@ -104,7 +104,9 @@ func (d *DependencyList) Install() (int, error) {
 
 	n := 0
 
-	install_semaphore = make(chan int, config.CPUs)
+	if install_semaphore == nil {
+		install_semaphore = make(chan int, config.CPUs)
+	}
 
 	var wg sync.WaitGroup
 	var errorLock sync.Mutex
@@ -146,12 +148,12 @@ func (d *DependencyList) Install() (int, error) {
 			install_mutex[dep.Module.Cached].Lock()
 
 			//log.Trace("%s:: Sending semaphore", dep.module)
-			//install_semaphore <- 1
+			install_semaphore <- 1
 			install_lock.Unlock()
 
 			o, err := dep.Module.Install()
 			//log.Trace("%s:: Waiting on semaphore", dep.module)
-			//<-install_semaphore
+			<-install_semaphore
 			//log.Trace("%s:: Got semaphore", dep.module)
 
 			global_installed[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
@@ -633,7 +635,11 @@ func (m *Module) Install() (int, error) {
 
 	if m.Deps != nil {
 		log.Trace("Installing module dependencies for %s", m)
+		
+		<-install_semaphore
 		o, err := m.Deps.Install()
+		install_semaphore <- 1
+
 		n += o
 		if err != nil {
 			log.Error("Error installing module dependencies for %s: %s", m, err)
