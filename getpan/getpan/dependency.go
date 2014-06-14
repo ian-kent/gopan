@@ -27,6 +27,7 @@ type DependencyList struct {
 var global_modules = make(map[string]*Module)
 var global_installed = make(map[string]*Module)
 var global_unique = make(map[string]int)
+var global_lock = new(sync.Mutex)
 var versionRe = regexp.MustCompile("^([=><!]+)?\\s*([v\\d\\._-]+)$")
 var file_lock = new(sync.Mutex)
 var file_get = make(map[string]*sync.Mutex)
@@ -209,12 +210,15 @@ func (d *DependencyList) Resolve() error {
 
 			semaphore <- 1
 
+			global_lock.Lock()
 			if gm, ok := global_modules[dep.Name+"-"+dep.Version]; ok {
 				log.Trace("Dependency %s already resolved (S1): %s", dep, gm)
+				global_lock.Unlock()
 				dep.Module = gm
 				<-semaphore
 				return
 			}
+			global_lock.Unlock()
 
 			log.Debug("Resolving: %s", dep)
 			err := dep.Resolve()
@@ -227,8 +231,28 @@ func (d *DependencyList) Resolve() error {
 				return
 			}
 
+			global_lock.Lock()
 			if gm, ok := global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL]; ok {
+				global_lock.Unlock()
 				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.Module)
+				dep.Module = gm
+			} else if gm, ok := global_modules[dep.Module.Name]; ok {
+				global_lock.Unlock()
+				log.Trace("Dependency %s already resolved (S3): %s", dep.Module.Name, dep.Module)
+
+				// See if the already resolved version is acceptable
+				if !dep.MatchesVersion(gm.Version) {
+					log.Error("Version conflict in dependency tree: %s => %s", dep, gm)
+					errorLock.Lock()
+					errs = append(errs, dep.Module.String())
+					errorLock.Unlock()
+					<-semaphore
+					return
+				}
+
+				log.Trace("Version %s matches %s", dep.Module, gm.Version)
+
+				// TODO See if downloading a new version would be better
 				dep.Module = gm
 			} else {
 				log.Debug("Downloading: %s", dep.Module)
@@ -250,8 +274,11 @@ func (d *DependencyList) Resolve() error {
 					}
 				}
 
+				// module can't exist because of global_lock
+				global_modules[dep.Module.Name] = dep.Module
 				global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
 				global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
+				global_lock.Unlock()
 
 				log.Debug("Resolving module dependencies: %s", dep.Module)
 				dep.Module.Deps = &DependencyList{
