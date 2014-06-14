@@ -24,7 +24,9 @@
 			{{ end }}
 			<div class="list-group">
 			{{ range .indexes }}
-				<label class="list-group-item"><input type="radio" name="importinto" value="{{ .Name }}" style="margin-right: 10px">{{ .Name }}</label>
+				{{ range . }}
+					<label class="list-group-item"><input type="radio" name="importinto" value="{{ .Name }}" style="margin-right: 10px">{{ .Name }}</label>
+				{{ end }}
 			{{ end }}
 				<label class="list-group-item"><input type="radio" name="importinto" value="new_index" style="margin-right: 10px">Create a new index:
 				{{ range .fh.Errors.NewIndex }}

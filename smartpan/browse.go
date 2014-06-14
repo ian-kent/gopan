@@ -224,11 +224,21 @@ func browse(session *http.Session) {
 		repo = r.(string)
 		fpath += repo + "/"
 
-		for fname, _ := range indexes {
-			if _, ok := indexes[fname][repo]; !ok && repo != "SmartPAN" {
-				session.RenderNotFound()
-				return
+		found := false
+		if repo == "SmartPAN" {
+			found = true
+		} else {
+			for fname, _ := range indexes {
+				if _, ok := indexes[fname][repo]; ok {
+					found = true
+					break
+				}
 			}
+		}
+
+		if !found {
+			session.RenderNotFound()
+			return
 		}
 	}
 	if i, ok := session.Stash["type"]; ok {
