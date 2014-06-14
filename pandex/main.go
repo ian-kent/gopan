@@ -52,37 +52,40 @@ func main() {
 					out.Write([]byte("  " + pkg.Name + " => " + pkg.URL + "\n"))
 					log.Debug("Package: %s", pkg)
 
-					// TODO better handling of filenames
-					modnm := strings.TrimSuffix(pkg.Name, ".tar.gz")
+					if !config.Flatten {
+						if len(pkg.Provides) == 0 {
+							// TODO better handling of filenames
+							modnm := strings.TrimSuffix(pkg.Name, ".tar.gz")
 
-					tgzpath := config.CacheDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name
+							tgzpath := config.CacheDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name
 
-					if _, err := os.Stat(tgzpath); err != nil {
-						log.Error("File not found: %s", tgzpath)
-						return
-					}
+							if _, err := os.Stat(tgzpath); err != nil {
+								log.Error("File not found: %s", tgzpath)
+								return
+							}
 
-					extpath := config.ExtDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + modnm
-					dirpath := config.ExtDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name
+							extpath := config.ExtDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + modnm
+							dirpath := config.ExtDir + "/" + idx.Name + "/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name
 
-					log.Trace("=> tgzpath: %s", tgzpath)
-					log.Trace(" > extpath: %s", extpath)
-					log.Trace(" > dirpath: %s", dirpath)
+							log.Trace("=> tgzpath: %s", tgzpath)
+							log.Trace(" > extpath: %s", extpath)
+							log.Trace(" > dirpath: %s", dirpath)
 
-					if len(pkg.Provides) == 0 {
-						// Only index packages if they don't already exist
-						pandex.Provides(pkg, tgzpath, extpath, dirpath)
-					}
+							// Only index packages if they don't already exist
+							pandex.Provides(pkg, tgzpath, extpath, dirpath)
+						}
 
-					npkg += len(pkg.Provides)
-					nmod += 1
+						npkg += len(pkg.Provides)
+						nmod += 1
 
-					for p, pk := range pkg.Provides {
-						out.Write([]byte("   " + p + " (" + pk.Version + "): " + pk.File + "\n"))
-					}
+						for p, pk := range pkg.Provides {
+							out.Write([]byte("   " + p + " (" + pk.Version + "): " + pk.File + "\n"))
+						}
 
-					if nmod > 0 && nmod%100 == 0 {
-						log.Info("%f%% Done %d/%d packages (%d provided so far)", pc(), nmod, tpkg, npkg)
+						if nmod > 0 && nmod%100 == 0 {
+							log.Info("%f%% Done %d/%d packages (%d provided so far)", pc(), nmod, tpkg, npkg)
+						}
+
 					}
 				}
 			}

@@ -6,11 +6,16 @@ import (
 )
 
 type Config struct {
-	LogLevel string
-	CacheDir string
-	Index    string
-	Bind     string
-	Indexes  []string
+	LogLevel        string
+	CacheDir        string
+	Index           string
+	Bind            string
+	Indexes         []string
+	LatestRelease   string
+	CurrentRelease  string
+	CanUpdate       bool
+	UpdateURL       string
+	ImportAvailable bool
 }
 
 var config *Config
@@ -34,10 +39,15 @@ func configure() {
 	flag.Parse()
 
 	config = &Config{
-		LogLevel: loglevel,
-		CacheDir: cachedir,
-		Index:    index,
-		Bind:     bind,
-		Indexes:  indexes,
+		LogLevel:        loglevel,
+		CacheDir:        cachedir,
+		Index:           index,
+		Bind:            bind,
+		Indexes:         indexes,
+		CanUpdate:       false,
+		LatestRelease:   "0.0",
+		CurrentRelease:  "0.0", // set in main.go so its in one place
+		UpdateURL:       "",
+		ImportAvailable: false,
 	}
 }

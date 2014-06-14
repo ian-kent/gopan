@@ -509,11 +509,18 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 func render_import(session *http.Session) {
 	html, _ := session.RenderTemplate("import.html")
 	session.Stash["Page"] = "Import"
+	session.Stash["ImportAvailable"] = config.ImportAvailable
 	session.Stash["Content"] = template.HTML(html)
 	session.Render("layout.html")
 }
 
 func import2(session *http.Session) {
+
+	if !config.ImportAvailable {
+		session.Render("error.html")
+		session.Stash["GoPANError"] = "Import is currently unavailable"
+		return
+	}
 
 	session.Stash["Page"] = "Import"
 	session.Stash["Title"] = "Import job " + session.Stash["jobid"].(string)

@@ -12,6 +12,8 @@ type Config struct {
 
 	InputIndex  string
 	OutputIndex string
+
+	Flatten bool
 }
 
 var config *Config
@@ -35,6 +37,9 @@ func configure() {
 	outputidx := "packages"
 	flag.StringVar(&outputidx, "output", "packages", "Output index file")
 
+	flatten := false
+	flag.BoolVar(&flatten, "flatten", false, "Only flatten index, don't update anything")
+
 	flag.Parse()
 
 	config = &Config{
@@ -44,5 +49,6 @@ func configure() {
 		ExtDir:      extdir,
 		InputIndex:  inputidx,
 		OutputIndex: outputidx,
+		Flatten:     flatten,
 	}
 }

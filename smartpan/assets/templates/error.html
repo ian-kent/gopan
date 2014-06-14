@@ -33,16 +33,29 @@
 			    </ul>
 
 			    <ul class="nav navbar-nav navbar-right">
-			      <li><a>{{ .summary.Sources }} sources</a></li>
-                  <li><a>{{ .summary.Authors }} authors</a></li>
-                  <li><a>{{ .summary.Modules }} modules</a></li>
-                  <li><a>{{ .summary.Packages }} packages</a></li>
+			      <li class="dropdown">
+		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Statistics <b class="caret"></b></a>
+		          <ul class="dropdown-menu">
+		            <li><a href="#"><span class="badge pull-right">{{ .summary.Sources }}</span> Sources</a></li>
+		            <li><a href="#"><span class="badge pull-right">{{ .summary.Authors }}</span> Authors</a></li>
+		            <li><a href="#"><span class="badge pull-right">{{ .summary.Modules }}</span> Modules</a></li>
+		            <li><a href="#"><span class="badge pull-right">{{ .summary.Packages }}</span> Packages</a></li>
+		          </ul>
+		        </li>
+                  <!--<li><a href="/settings"><span class="glyphicon glyphicon-wrench"></span> Settings</a></li>-->
+                  {{ if .config.CanUpdate }}
+                  <li><a href="/settings"><span class="glyphicon glyphicon-info-sign"></span> Update available</a></li>
+                  {{ end }}
                   <li><a href="/help"><span class="glyphicon glyphicon-question-sign"></span> Help</a></li>
+                  {{ if not .config.ImportAvailable }}
+                  <li class="bg-info"><a href="#"><span class="glyphicon glyphicon-refresh"></span> Loading</a></li>
+                  {{ end }}
                 </ul>
 			  </div>
 			</div>
 		</nav>
 
+		{{ if .Gotcha.Error }}
 		<div class="container">
 			<h1>{{.Gotcha.Error}}</h1>
 			<article>
@@ -50,6 +63,13 @@
 				<pre>{{.Gotcha.Stack}}</pre>
 			</article>
 		</div>
+		{{ end }}
+
+		{{ if .GoPANError }}
+		<div class="container">
+			<h1>{{.GoPANError}}</h1>
+		</div>
+		{{ end }}
 
 		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.js"></script>

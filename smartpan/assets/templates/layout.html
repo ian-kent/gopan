@@ -33,11 +33,23 @@
 			    </ul>
 
 			    <ul class="nav navbar-nav navbar-right">
-			      <li><a>{{ .summary.Sources }} sources</a></li>
-                  <li><a>{{ .summary.Authors }} authors</a></li>
-                  <li><a>{{ .summary.Modules }} modules</a></li>
-                  <li><a>{{ .summary.Packages }} packages</a></li>
+			      <li class="dropdown">
+		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Statistics <b class="caret"></b></a>
+		          <ul class="dropdown-menu">
+		            <li><a href="#">{{ .summary.Sources }} Sources</a></li>
+		            <li><a href="#">{{ .summary.Authors }} Authors</a></li>
+		            <li><a href="#">{{ .summary.Modules }} Modules</a></li>
+		            <li><a href="#">{{ .summary.Packages }} Packages</a></li>
+		          </ul>
+		        </li>
+                  <!--<li{{ if eq .Page "Settings" }} class="active"{{end}}><a href="/settings"><span class="glyphicon glyphicon-wrench"></span> Settings</a></li>-->
+                  {{ if .config.CanUpdate }}
+                  <li><a href="/settings"><span class="glyphicon glyphicon-info-sign"></span> Update available</a></li>
+                  {{ end }}
                   <li{{ if eq .Page "Help" }} class="active"{{end}}><a href="/help"><span class="glyphicon glyphicon-question-sign"></span> Help</a></li>
+                  {{ if not .config.ImportAvailable }}
+                  <li class="bg-info"><a href="#"><span class="glyphicon glyphicon-refresh"></span> Loading</a></li>
+                  {{ end }}
                 </ul>
 			  </div>
 			</div>

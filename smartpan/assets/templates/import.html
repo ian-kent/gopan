@@ -7,6 +7,8 @@
 }
 </style>
 
+{{ if .config.ImportAvailable }}
+
 <form role="form" method="post" action="" enctype="multipart/form-data">
 	{{ if .fh.HasErrors }}
 	<div class="alert alert-danger">
@@ -132,3 +134,12 @@
 	</div>
 
 </form>
+
+{{ else }}
+
+<div class="alert alert-info">
+	<strong>Error</strong>
+	Import is unavailable while indexes are loaded. Please try again later.
+</div>
+
+{{ end }}

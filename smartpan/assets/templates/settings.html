@@ -1,0 +1,12 @@
+<style>
+
+</style>
+
+<h1>SmartPAN Settings</h1>
+
+{{ if .config.CanUpdate }}
+<div class="update alert alert-info">
+	<strong>Update available</strong>
+	<a href="{{ .config.UpdateURL }}">Version {{ .config.LatestRelease }} is available on GitHub.</a>
+</div>
+{{ end }}
