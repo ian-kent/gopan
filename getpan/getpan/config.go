@@ -12,14 +12,14 @@ import (
 
 var config *Config
 
-type NoTestConfig struct {
+type TestConfig struct {
 	Global  bool
 	Modules map[string]bool
 }
 
 type Config struct {
 	Sources   []*Source
-	NoTest    *NoTestConfig
+	Test      *TestConfig
 	NoInstall bool
 	CPANFile  string
 	LogLevel  string
@@ -35,12 +35,13 @@ func (c *Config) Dump() {
 		log.Info(" - %s", s)
 	}
 
-	log.Info("=> NoTest")
-	if c.NoTest.Global {
-		log.Info(" - ALL tests are disabled")
+	log.Info("=> Test")
+	if c.Test.Global {
+		log.Info(" - Global tests are enabled")
 	} else {
-		for m, _ := range c.NoTest.Modules {
-			log.Info(" - %s", m)
+		log.Info(" - Global tests are disabled")
+		for m, _ := range c.Test.Modules {
+			log.Info(" - %s tests are enabled", m)
 		}
 	}
 
@@ -65,7 +66,7 @@ func DefaultSources(cpan bool, backpan bool) []*Source {
 func DefaultConfig() *Config {
 	config = &Config{
 		Sources: DefaultSources(true, true),
-		NoTest: &NoTestConfig{
+		Test: &TestConfig{
 			Global:  false,
 			Modules: make(map[string]bool),
 		},
@@ -89,11 +90,11 @@ func Configure() *Config {
 	smart := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&smart), "smart", "A SmartPAN mirror (can be specified multiple times)")
 
-	notest := make([]string, 0)
-	flag.Var((*gopan.AppendSliceValue)(&notest), "notest", "A module to install without testing (can be specified multiple times)")
+	test := make([]string, 0)
+	flag.Var((*gopan.AppendSliceValue)(&test), "test", "A module to install with testing (can be specified multiple times)")
 
-	nevertest := false
-	flag.BoolVar(&nevertest, "nevertest", false, "Disables all tests during installation phase")
+	tests := false
+	flag.BoolVar(&tests, "tests", false, "Enables all tests during installation phase")
 
 	nocpan := false
 	flag.BoolVar(&nocpan, "nocpan", false, "Disables the default CPAN source")
@@ -143,10 +144,10 @@ func Configure() *Config {
 	}
 
 	// parse notest
-	for _, n := range notest {
-		conf.NoTest.Modules[n] = true
+	for _, n := range test {
+		conf.Test.Modules[n] = true
 	}
-	conf.NoTest.Global = nevertest
+	conf.Test.Global = tests
 
 	// parse cpanfile
 	conf.CPANFile = cpanfile

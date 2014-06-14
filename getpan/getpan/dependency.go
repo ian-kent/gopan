@@ -618,24 +618,24 @@ func (m *Module) loadDependencies() error {
 
 func (m *Module) getCmd() *exec.Cmd {
 	var c *exec.Cmd
-	if _, ok := config.NoTest.Modules[m.Name]; ok || config.NoTest.Global {
+	if _, ok := config.Test.Modules[m.Name]; ok || config.Test.Global {
+		log.Trace("Executing cpanm install without --notest flag for %s", m.Cached)
+		c = exec.Command("cpanm", "-l", "./local", m.Cached)
+	} else {
 		log.Trace("Executing cpanm install with --notest flag for %s", m.Cached)
 		c = exec.Command("cpanm", "--notest", "-l", "./local", m.Cached)
-	} else {
-		log.Trace("Executing cpanm install for %s", m.Cached)
-		c = exec.Command("cpanm", "-l", "./local", m.Cached)
 	}
 	return c
 }
 
 func (m *Module) Install() (int, error) {
-	log.Printf("Installing module: %s", m)
+	log.Debug("Installing module: %s", m)
 
 	n := 0
 
 	if m.Deps != nil {
 		log.Trace("Installing module dependencies for %s", m)
-		
+
 		<-install_semaphore
 		o, err := m.Deps.Install()
 		install_semaphore <- 1

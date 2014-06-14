@@ -47,11 +47,11 @@ If you have a [SmartPAN](../smartpan/README.md), pass in the URL with `-smart`:
 | -cpus             | -cpus 4                          | Number of CPUs to use
 | -loglayout        | -loglayout="[%d] %m"             | A github.com/ian-kent/go-log compatible pattern layout
 | -loglevel         | -loglevel=TRACE                  | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
-| -nevertest        | -nevertest                       | Disables all installation tests
+| -tests            | -tests                           | Enables all installation tests
 | -nocpan           | -nocpan                          | Disables the default CPAN source
 | -nobackpan        | -nobackpan                       | Disables the default BackPAN source
 | -noinstall        | -noinstall                       | Skips the installation phase
-| -notest           | -notest AnyCache                 | Disables tests for a specific module
+| -test             | -test AnyCache                   | Enables tests for a specific module
 
 ## cpanfile support
 
