@@ -7,21 +7,22 @@ deps:
 	go get code.google.com/p/go.net/html
 	go get gopkg.in/yaml.v1
 
-install:
-	go install ./pandex
-	go install ./mirropan
-	go install ./getpan
-	cd smartpan && make
+install: pandex mirropan getpan smartpan
 
-build:
-	go build ./pandex
-	go build ./mirropan
-	go build ./getpan
-	cd smartpan && make
-
-dist:
-	cd smartpan && make # to compile assets
+dist: smartpan
 	rm ./build -rf
 	./gox_build.sh "0.3b"
 
-.PHONY: all deps install build dist
+pandex:
+	go install ./pandex
+
+mirropan:
+	go install ./mirropan
+
+getpan:
+	go install ./getpan
+
+smartpan:
+	cd smartpan && make # to compile assets
+
+.PHONY: all deps install build dist pandex mirropan getpan smartpan
