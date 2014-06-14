@@ -170,9 +170,10 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 				for author, auth := range mapped[idx][fl][sl] {
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
-							"Name":  pos,
-							"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
-							"Glyph": "compressed",
+							"Name":      pos,
+							"Path":      "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+							"Glyph":     "compressed",
+							"Removable": "true",
 						}
 					}
 				}
@@ -180,9 +181,10 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 				if auth, ok := mapped[idx][fl][sl][author]; ok {
 					for pos, _ := range auth.Packages {
 						files[pos] = map[string]string{
-							"Name":  pos,
-							"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
-							"Glyph": "compressed",
+							"Name":      pos,
+							"Path":      "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+							"Glyph":     "compressed",
+							"Removable": "true",
 						}
 					}
 				}
@@ -193,18 +195,20 @@ func tlModuleList(idx string, fl string, sl string, author string) map[string]ma
 			for author, _ := range mapped[idx][fl][sl] {
 				for pos, _ := range mapped[idx][fl][sl][author].Packages {
 					files[pos] = map[string]string{
-						"Name":  pos,
-						"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
-						"Glyph": "compressed",
+						"Name":      pos,
+						"Path":      "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+						"Glyph":     "compressed",
+						"Removable": "true",
 					}
 				}
 			}
 		} else {
 			for pos, _ := range mapped[idx][fl][sl][author].Packages {
 				files[pos] = map[string]string{
-					"Name":  pos,
-					"Path":  "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
-					"Glyph": "compressed",
+					"Name":      pos,
+					"Path":      "/" + idx + "/authors/id/" + author[:1] + "/" + author[:2] + "/" + author + "/" + pos,
+					"Glyph":     "compressed",
+					"Removable": "true",
 				}
 			}
 		}

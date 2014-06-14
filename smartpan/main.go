@@ -211,6 +211,7 @@ func main() {
 	r.Get("/(?P<repo>[^/]+)/(?P<type>[^/]+)/?", browse)
 	r.Get("/(?P<repo>[^/]+)/modules/02packages\\.details\\.txt(?P<gz>\\.gz)?", pkgindex)
 	r.Get("/(?P<repo>[^/]+)/authors/id/(?P<file>.*\\.tar\\.gz)", download)
+	r.Post("/delete/(?P<repo>[^/]+)/authors/id/(?P<auth1>[^/]+)/(?P<auth2>[^/]+)/(?P<auth3>[^/]+)/(?P<file>.*\\.tar\\.gz)", delete_file)
 	r.Get("/(?P<repo>[^/]+)/(?P<type>[^/]+)/(?P<path>.*)/?", browse)
 
 	// Start our application

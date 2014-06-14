@@ -45,6 +45,21 @@ func AppendToIndex(index string, source *Source, author *Author, pkg *Package) {
 	out.Close()
 }
 
+func RemoveModule(index string, source *Source, author *Author, pkg *Package) {
+	os.MkdirAll(".gopancache", 0777)
+	out, err := os.OpenFile(index, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		log.Error("Error opening index: %s", err.Error())
+		return
+	}
+
+	out.Write([]byte(source.Name + " [" + source.URL + "]\n"))
+	out.Write([]byte(" " + author.Name + " [" + author.URL + "]\n"))
+	out.Write([]byte("  -" + pkg.Name + " => " + pkg.URL + "\n"))
+
+	out.Close()
+}
+
 func SaveIndex(index string, indexes map[string]*Source) {
 	// TODO append, but needs to know which stuff is new
 	//out, err := os.OpenFile(".gopancache/index", os.O_RDWR|os.O_APPEND, 0660)
@@ -101,11 +116,31 @@ func LoadIndex(index string) map[string]*Source {
 			log.Trace("=> Provides")
 			match := reprovides.FindStringSubmatch(l)
 			if len(match) > 0 {
-				cpkg.Provides[match[1]] = &PerlPackage{
-					Name:    match[1],
-					Version: match[2],
-					Package: cpkg,
-					File:    match[3],
+				if strings.HasPrefix(match[1], "-") {
+					log.Trace("  - Is a removal")
+					match[1] = strings.TrimPrefix(match[1], "-")
+					if _, ok := cpkg.Provides[match[1]]; ok {
+						delete(cpkg.Provides, match[1])
+					}
+					if len(cpkg.Provides) == 0 {
+						delete(cauth.Packages, cpkg.Name)
+						cpkg = nil
+					}
+					if len(cauth.Packages) == 0 {
+						delete(csource.Authors, cauth.Name)
+						cauth = nil
+					}
+					if len(csource.Authors) == 0 {
+						delete(indexes, csource.Name)
+						csource = nil
+					}
+				} else {
+					cpkg.Provides[match[1]] = &PerlPackage{
+						Name:    match[1],
+						Version: match[2],
+						Package: cpkg,
+						File:    match[3],
+					}
 				}
 			}
 		} else if strings.HasPrefix(l, "  ") {
@@ -113,63 +148,99 @@ func LoadIndex(index string) map[string]*Source {
 			log.Trace("=> Package")
 			match := repackage.FindStringSubmatch(l)
 			if len(match) > 0 {
-				if _, ok := cauth.Packages[match[1]]; ok {
-					// we've seen this package before
-					log.Trace("Seen this package before: %s", match[1])
-					cpkg = cauth.Packages[match[1]]
-					continue
+				if strings.HasPrefix(match[1], "-") {
+					log.Trace("  - Is a removal")
+					match[1] = strings.TrimPrefix(match[1], "-")
+					if _, ok := cauth.Packages[match[1]]; ok {
+						delete(cauth.Packages, match[1])
+					}
+					if len(cauth.Packages) == 0 {
+						delete(csource.Authors, cauth.Name)
+						cauth = nil
+					}
+					if len(csource.Authors) == 0 {
+						delete(indexes, csource.Name)
+						csource = nil
+					}
+				} else {
+					if _, ok := cauth.Packages[match[1]]; ok {
+						// we've seen this package before
+						log.Trace("Seen this package before: %s", match[1])
+						cpkg = cauth.Packages[match[1]]
+						continue
+					}
+					cpkg = &Package{
+						Name:     match[1],
+						URL:      match[2],
+						Author:   cauth,
+						Provides: make(map[string]*PerlPackage),
+					}
+					cauth.Packages[match[1]] = cpkg
 				}
-				cpkg = &Package{
-					Name:     match[1],
-					URL:      match[2],
-					Author:   cauth,
-					Provides: make(map[string]*PerlPackage),
-				}
-				cauth.Packages[match[1]] = cpkg
 			}
 		} else if strings.HasPrefix(l, " ") {
 			// its an author
 			log.Trace("=> Author")
 			match := resrcauth.FindStringSubmatch(l)
 			if len(match) > 0 {
-				if _, ok := csource.Authors[match[1]]; ok {
-					// we've seen this author before
-					log.Trace("Seen this author before: %s", match[1])
-					cauth = csource.Authors[match[1]]
-					continue
+				if strings.HasPrefix(match[1], "-") {
+					log.Trace("  - Is a removal")
+					match[1] = strings.TrimPrefix(match[1], "-")
+					if _, ok := csource.Authors[match[1]]; ok {
+						delete(csource.Authors, match[1])
+					}
+					if len(csource.Authors) == 0 {
+						delete(indexes, csource.Name)
+						csource = nil
+					}
+				} else {
+					if _, ok := csource.Authors[match[1]]; ok {
+						// we've seen this author before
+						log.Trace("Seen this author before: %s", match[1])
+						cauth = csource.Authors[match[1]]
+						continue
+					}
+					cauth = &Author{
+						Name:     match[1],
+						URL:      match[2],
+						Source:   csource,
+						Packages: make(map[string]*Package, 0),
+					}
+					csource.Authors[match[1]] = cauth
 				}
-				cauth = &Author{
-					Name:     match[1],
-					URL:      match[2],
-					Source:   csource,
-					Packages: make(map[string]*Package, 0),
-				}
-				csource.Authors[match[1]] = cauth
 			}
 		} else {
 			// its a source
 			log.Trace("=> Source")
 			match := resrcauth.FindStringSubmatch(l)
 			if len(match) > 0 {
-				seen := false
-				for _, idx := range indexes {
-					if idx.Name == match[1] {
-						// we've seen this source before
-						log.Trace("Seen this source before: %s", idx.Name)
-						csource = idx
-						seen = true
-						break
+				if strings.HasPrefix(match[1], "-") {
+					log.Trace("  - Is a removal")
+					match[1] = strings.TrimPrefix(match[1], "-")
+					if _, ok := indexes[match[1]]; ok {
+						delete(indexes, match[1])
 					}
+				} else {
+					seen := false
+					for _, idx := range indexes {
+						if idx.Name == match[1] {
+							// we've seen this source before
+							log.Trace("Seen this source before: %s", idx.Name)
+							csource = idx
+							seen = true
+							break
+						}
+					}
+					if seen {
+						continue
+					}
+					csource = &Source{
+						Name:    match[1],
+						URL:     match[2],
+						Authors: make(map[string]*Author, 0),
+					}
+					indexes[csource.Name] = csource
 				}
-				if seen {
-					continue
-				}
-				csource = &Source{
-					Name:    match[1],
-					URL:     match[2],
-					Authors: make(map[string]*Author, 0),
-				}
-				indexes[csource.Name] = csource
 			}
 		}
 	}

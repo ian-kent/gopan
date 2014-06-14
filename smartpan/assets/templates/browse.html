@@ -33,6 +33,96 @@
 {{ else }}
 {{ end }}
 
+<script>
+$(function() {
+	(function ($, window) {
+
+	    $.fn.contextMenu = function (settings) {
+
+	        return this.each(function () {
+
+	            // Open context menu
+	            $(this).on("contextmenu", function (e) {
+	                //open menu
+	                $(settings.menuSelector)
+	                    .data("invokedOn", $(e.target))
+	                    .show()
+	                    .css({
+	                        position: "absolute",
+	                        left: getLeftLocation(e),
+	                        top: getTopLocation(e)
+	                    });
+	                
+	                //add click listener on menu
+	                ContextMenuClickHandler();
+	                
+	                return false;
+	            });
+
+	            // click handler for context menu
+	            function ContextMenuClickHandler() {
+	                $(settings.menuSelector)
+	                    .off('click')
+	                    .on( 'click', function (e) {
+	                        $(this).hide();
+	                
+	                        var $invokedOn = $(this).data("invokedOn");
+	                        var $selectedMenu = $(e.target);
+	                        
+	                        settings.menuSelected.call($(this), $invokedOn, $selectedMenu);
+	                });
+	                
+	            }
+
+	            //make sure menu closes on any click
+	            $(document).click(function () {
+	                $(settings.menuSelector).hide();
+	            });
+	        });
+
+	        function getLeftLocation(e) {
+	            var mouseWidth = e.pageX;
+	            var pageWidth = $(window).width();
+	            var menuWidth = $(settings.menuSelector).width();
+	            
+	            // opening menu would pass the side of the page
+	            if (mouseWidth + menuWidth > pageWidth &&
+	                menuWidth < mouseWidth) {
+	                return mouseWidth - menuWidth;
+	            } 
+	            return mouseWidth;
+	        }        
+	        
+	        function getTopLocation(e) {
+	            var mouseHeight = e.pageY;
+	            var pageHeight = $(window).height();
+	            var menuHeight = $(settings.menuSelector).height();
+
+	            // opening menu would pass the bottom of the page
+	            if (mouseHeight + menuHeight > pageHeight &&
+	                menuHeight < mouseHeight) {
+	                return mouseHeight - menuHeight;
+	            } 
+	            return mouseHeight;
+	        }
+
+	    };
+	})(jQuery, window);
+
+	$(".dirlist li.removable").contextMenu({
+	    menuSelector: "#contextMenu",
+	    menuSelected: function (invokedOn, selectedMenu) {
+	        if(selectedMenu.text() == " Delete file") {
+		        $('#delete-name').text(invokedOn.text());
+		        $('#delete-full-path').text(invokedOn.attr("href"));
+		        $('#delete-form').attr('action', '/delete' + invokedOn.attr("href"))
+		        $('#delete-popup').modal();
+	        }
+	    }
+	});
+});
+</script>
+
 {{ if .Package }}
 <div class="package">
 	<table class="table table-condensed">
@@ -58,13 +148,37 @@
 </div>
 {{ end }}
 
+<ul id="contextMenu" class="dropdown-menu" role="menu">
+    <li><a tabindex="-1" href="#"><span class="glyphicon glyphicon-trash"></span> Delete file</a></li>
+</ul>
+
+<form id="delete-form" action="" method="post">
+<div class="modal fade" id="delete-popup">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Delete <span id="delete-name"></span></h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <span id="delete-full-path"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">No, cancel</button>
+        <button type="submit" class="btn btn-danger">Yes, delete it</button>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
 <div class="dirlist">
 	<ul>
 		{{ range .Dirs }}
-		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-folder-close"></span> {{ .Name }}</a></li>
+		<li {{ if .Removable }}class="removable"{{ end }}><a href="{{ .Path }}"><span class="glyphicon glyphicon-folder-close"></span> {{ .Name }}</a></li>
 		{{ end }}
 		{{ range .Files }}
-		<li><a href="{{ .Path }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a></li>
+		<li {{ if .Removable }}class="removable"{{ end }}><a href="{{ .Path }}"><span class="glyphicon glyphicon-{{ .Glyph }}"></span> {{ .Name }}</a></li>
 		{{ end }}
 	</ul>
 </div>

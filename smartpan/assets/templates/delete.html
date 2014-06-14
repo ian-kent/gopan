@@ -1,0 +1,9 @@
+{{ if not .DeleteError }}
+<h1>File deleted</h1>
+
+<p>{{ .file }} has been removed from {{ .repo }}.</p>
+{{ else }}
+<h1>Error deleting file</h1>
+
+<p>An error occured deleting {{ .file }} from {{ .repo }}.</p>
+{{ end }}
