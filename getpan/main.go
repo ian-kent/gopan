@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/getpan/getpan"
-	"flag"
-	"strings"
-	"os/exec"
 	"os"
+	"os/exec"
+	"strings"
 )
 
 var config *getpan.Config

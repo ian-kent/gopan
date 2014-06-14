@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/ian-kent/gopan/gopan"
 )
 
 type Config struct {
@@ -9,6 +10,7 @@ type Config struct {
 	CacheDir string
 	Index    string
 	Bind     string
+	Indexes  []string
 }
 
 var config *Config
@@ -21,10 +23,13 @@ func configure() {
 	flag.StringVar(&cachedir, "cachedir", ".gopancache", "GoPAN cache directory")
 
 	index := "index"
-	flag.StringVar(&index, "index", "index", "Name of GoPAN index file")
+	flag.StringVar(&index, "index", "index", "Name of the primary GoPAN index file")
 
 	bind := ":7050"
 	flag.StringVar(&bind, "bind", ":7050", "Interface to bind to")
+
+	indexes := make([]string, 0)
+	flag.Var((*gopan.AppendSliceValue)(&indexes), "s-index", "Secondary indexes to load (can be provided multiple times)")
 
 	flag.Parse()
 
@@ -33,5 +38,6 @@ func configure() {
 		CacheDir: cachedir,
 		Index:    index,
 		Bind:     bind,
+		Indexes:  indexes,
 	}
 }

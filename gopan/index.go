@@ -8,16 +8,18 @@ import (
 	"strings"
 )
 
-func CountIndex(indexes map[string]*Source) (int, int, int, int) {
+func CountIndex(indexes map[string]map[string]*Source) (int, int, int, int) {
 	var n1, n2, n3, n4 int
 
 	n1 = len(indexes)
-	for _, idx := range indexes {
-		n2 += len(idx.Authors)
-		for _, auth := range idx.Authors {
-			n3 += len(auth.Packages)
-			for _, pkg := range auth.Packages {
-				n4 += len(pkg.Provides)
+	for fname, _ := range indexes {
+		for _, idx := range indexes[fname] {
+			n2 += len(idx.Authors)
+			for _, auth := range idx.Authors {
+				n3 += len(auth.Packages)
+				for _, pkg := range auth.Packages {
+					n4 += len(pkg.Provides)
+				}
 			}
 		}
 	}

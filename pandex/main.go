@@ -11,12 +11,13 @@ import (
 
 var wg = new(sync.WaitGroup)
 var sem = make(chan int, 6)
-var indexes map[string]*gopan.Source
+var indexes map[string]map[string]*gopan.Source
 
 func main() {
 	configure()
 
-	indexes := gopan.LoadIndex(config.CacheDir + "/index")
+	indexes = make(map[string]map[string]*gopan.Source)
+	indexes[config.InputIndex] = gopan.LoadIndex(config.CacheDir + "/" + config.InputIndex)
 
 	log.Logger().SetLevel(log.Stol(config.LogLevel))
 	log.Info("Using log level: %s", config.LogLevel)
@@ -31,18 +32,25 @@ func main() {
 		return float64(nmod) / float64(tpkg) * 100
 	}
 
-	for _, idx := range indexes {
-		log.Debug("Index: %s", idx)
-		for _, auth := range idx.Authors {
-			log.Debug("Author %s", auth)
-			for _, pkg := range auth.Packages {
-				wg.Add(1)
-				go func(idx *gopan.Source, auth *gopan.Author, pkg *gopan.Package) {
-					defer wg.Done()
+	log.Info("Writing packages index file")
 
+	out, err := os.Create(config.CacheDir + "/" + config.OutputIndex)
+	if err != nil {
+		log.Error("Error creating packages index: %s", err.Error())
+		return
+	}
+
+	for fname, _ := range indexes {
+		log.Debug("File: %s", fname)
+		for _, idx := range indexes[fname] {
+			log.Debug("Index: %s", idx)
+			out.Write([]byte(idx.Name + " [" + idx.URL + "]\n"))
+			for _, auth := range idx.Authors {
+				log.Debug("Author %s", auth)
+				out.Write([]byte(" " + auth.Name + " [" + auth.URL + "]\n"))
+				for _, pkg := range auth.Packages {
+					out.Write([]byte("  " + pkg.Name + " => " + pkg.URL + "\n"))
 					log.Debug("Package: %s", pkg)
-
-					sem <- 1
 
 					// TODO better handling of filenames
 					modnm := strings.TrimSuffix(pkg.Name, ".tar.gz")
@@ -61,39 +69,21 @@ func main() {
 					log.Trace(" > extpath: %s", extpath)
 					log.Trace(" > dirpath: %s", dirpath)
 
-					pandex.Provides(pkg, tgzpath, extpath, dirpath)
+					if len(pkg.Provides) == 0 {
+						// Only index packages if they don't already exist
+						pandex.Provides(pkg, tgzpath, extpath, dirpath)
+					}
 
 					npkg += len(pkg.Provides)
 					nmod += 1
 
+					for p, pk := range pkg.Provides {
+						out.Write([]byte("   " + p + " (" + pk.Version + "): " + pk.File + "\n"))
+					}
+
 					if nmod > 0 && nmod%100 == 0 {
 						log.Info("%f%% Done %d/%d packages (%d provided so far)", pc(), nmod, tpkg, npkg)
 					}
-
-					<-sem
-				}(idx, auth, pkg)
-			}
-		}
-	}
-
-	wg.Wait()
-
-	log.Info("Writing packages index file")
-
-	out, err := os.Create(config.CacheDir + "/packages")
-	if err != nil {
-		log.Error("Error creating packages index: %s", err.Error())
-	}
-
-	// FIXME same as gopan/index.go?
-	for _, idx := range indexes {
-		out.Write([]byte(idx.Name + " [" + idx.URL + "]\n"))
-		for _, auth := range idx.Authors {
-			out.Write([]byte(" " + auth.Name + " [" + auth.URL + "]\n"))
-			for _, pkg := range auth.Packages {
-				out.Write([]byte("  " + pkg.Name + " => " + pkg.URL + "\n"))
-				for p, pk := range pkg.Provides {
-					out.Write([]byte("   " + p + " (" + pk.Version + "): " + pk.File + "\n"))
 				}
 			}
 		}

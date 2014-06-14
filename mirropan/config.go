@@ -14,6 +14,7 @@ type Config struct {
 	BackPAN  bool
 	LogLevel string
 	CacheDir string
+	Index    string
 }
 
 var config *Config
@@ -41,6 +42,9 @@ func configure() {
 	cachedir := ".gopancache"
 	flag.StringVar(&cachedir, "cachedir", ".gopancache", "GoPAN cache directory")
 
+	index := "index"
+	flag.StringVar(&index, "index", "index", "GoPAN index filename")
+
 	flag.Parse()
 
 	config = &Config{
@@ -52,5 +56,6 @@ func configure() {
 		BackPAN:  backpan,
 		LogLevel: loglevel,
 		CacheDir: cachedir,
+		Index:    index,
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 var wg = new(sync.WaitGroup)
 var sem = make(chan int, 100)
-var indexes map[string]*gopan.Source
+var indexes map[string]map[string]*gopan.Source
 
 func main() {
 	configure()
@@ -18,8 +18,9 @@ func main() {
 	log.Logger().SetLevel(log.Stol(config.LogLevel))
 	log.Info("Using log level: %s", config.LogLevel)
 
+	indexes = make(map[string]map[string]*gopan.Source)
 	if !config.NoCache {
-		indexes = gopan.LoadIndex(config.CacheDir + "/index")
+		indexes[config.Index] = gopan.LoadIndex(config.CacheDir + "/" + config.Index)
 	}
 
 	if config.NoCache || config.Update {
@@ -30,11 +31,11 @@ func main() {
 				return
 			}
 
-			if idx, ok := indexes[b[0]]; ok {
+			if idx, ok := indexes[config.Index][b[0]]; ok {
 				log.Warn("Index [%s] already exists with URL [%s], updating to [%s]", idx.URL, b[1])
 				idx.URL = b[1]
 			} else {
-				indexes[b[0]] = &gopan.Source{
+				indexes[config.Index][b[0]] = &gopan.Source{
 					Name:    b[0],
 					URL:     b[1],
 					Authors: make(map[string]*gopan.Author, 0),
@@ -42,42 +43,45 @@ func main() {
 			}
 		}
 
-		if len(indexes) == 0 && !config.CPAN && !config.BackPAN {
+		if len(indexes[config.Index]) == 0 && !config.CPAN && !config.BackPAN {
 			log.Debug("No -source, -cpan, -backpan parameters, adding default CPAN/BackPAN")
 			config.CPAN = true
 			config.BackPAN = true
 		}
 
 		if config.CPAN {
-			if _, ok := indexes["CPAN"]; !ok {
+			if _, ok := indexes[config.Index]["CPAN"]; !ok {
 				log.Debug("Adding CPAN index")
-				indexes["CPAN"] = gopan.CPANSource()
+				indexes[config.Index]["CPAN"] = gopan.CPANSource()
 			} else {
 				log.Debug("CPAN index already exists")
 			}
 		}
 
 		if config.BackPAN {
-			if _, ok := indexes["BackPAN"]; !ok {
+			if _, ok := indexes[config.Index]["BackPAN"]; !ok {
 				log.Debug("Adding BackPAN index")
-				indexes["BackPAN"] = gopan.BackPANSource()
+				indexes[config.Index]["BackPAN"] = gopan.BackPANSource()
 			} else {
 				log.Debug("BackPAN index already exists")
 			}
 		}
 
 		log.Info("Using sources:")
-		for _, source := range indexes {
-			log.Info("=> %s", source.String())
+		for fname, _ := range indexes {
+			log.Info("From %s", fname)
+			for _, source := range indexes[fname] {
+				log.Info("=> %s", source.String())
+			}
 		}
 
 		newAuthors := getAuthors()
 		newPackages := getPackages()
 
-		os.MkdirAll(".gopancache", 0777)
+		os.MkdirAll(config.CacheDir, 0777)
 
 		if !config.NoCache {
-			gopan.SaveIndex(config.CacheDir+"/index", indexes)
+			gopan.SaveIndex(config.CacheDir+"/"+config.Index, indexes[config.Index])
 		}
 
 		if config.Update {

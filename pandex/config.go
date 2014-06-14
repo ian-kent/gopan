@@ -9,6 +9,9 @@ type Config struct {
 	LogLevel string
 	CacheDir string
 	ExtDir   string
+
+	InputIndex  string
+	OutputIndex string
 }
 
 var config *Config
@@ -24,14 +27,22 @@ func configure() {
 	flag.StringVar(&cachedir, "cachedir", ".gopancache", "GoPAN cache directory")
 
 	extdir := ".gopancache"
-	flag.StringVar(&cachedir, "extdir", ".gopancache", "Temporary directory for extraction")
+	flag.StringVar(&extdir, "extdir", ".gopancache", "Temporary directory for extraction")
+
+	inputidx := "index"
+	flag.StringVar(&inputidx, "input", "index", "Input index file")
+
+	outputidx := "packages"
+	flag.StringVar(&outputidx, "output", "packages", "Output index file")
 
 	flag.Parse()
 
 	config = &Config{
-		Update:   update,
-		LogLevel: loglevel,
-		CacheDir: cachedir,
-		ExtDir:   extdir,
+		Update:      update,
+		LogLevel:    loglevel,
+		CacheDir:    cachedir,
+		ExtDir:      extdir,
+		InputIndex:  inputidx,
+		OutputIndex: outputidx,
 	}
 }

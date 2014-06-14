@@ -41,41 +41,43 @@ func getPackages() int {
 
 	log.Info("Building package list")
 
-	for _, source := range indexes {
-		log.Debug("Index: %s", source)
-		wg.Add(1)
-		go func(source *gopan.Source) {
-			defer wg.Done()
-			for _, author := range source.Authors {
-				wg.Add(1)
-				go func(author *gopan.Author) {
-					defer wg.Done()
-					sem <- 1
-					log.Trace("=> %s", author)
+	for fname, _ := range indexes {
+		for _, source := range indexes[fname] {
+			log.Debug("Index: %s", source)
+			wg.Add(1)
+			go func(source *gopan.Source) {
+				defer wg.Done()
+				for _, author := range source.Authors {
+					wg.Add(1)
+					go func(author *gopan.Author) {
+						defer wg.Done()
+						sem <- 1
+						log.Trace("=> %s", author)
 
-					url := source.URL + "/" + author.Name[:1] + "/" + author.Name[:2] + "/" + author.Name + "/"
-					log.Trace("Getting URL: %s", url)
+						url := source.URL + "/" + author.Name[:1] + "/" + author.Name[:2] + "/" + author.Name + "/"
+						log.Trace("Getting URL: %s", url)
 
-					res, err := http.Get(url)
-					if err != nil {
-						log.Error("HTTP GET - %s", err.Error())
+						res, err := http.Get(url)
+						if err != nil {
+							log.Error("HTTP GET - %s", err.Error())
+							<-sem
+							return
+						}
+
+						doc, err := html.Parse(res.Body)
+						if err != nil {
+							log.Error("HTML PARSE - %s", err.Error())
+							<-sem
+							return
+						}
+
+						pl(doc, source, author)
+
 						<-sem
-						return
-					}
-
-					doc, err := html.Parse(res.Body)
-					if err != nil {
-						log.Error("HTML PARSE - %s", err.Error())
-						<-sem
-						return
-					}
-
-					pl(doc, source, author)
-
-					<-sem
-				}(author)
-			}
-		}(source)
+					}(author)
+				}
+			}(source)
+		}
 	}
 
 	wg.Wait()

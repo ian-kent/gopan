@@ -5,8 +5,8 @@ import (
 	"github.com/ian-kent/gopan/gopan"
 )
 
-// GoPAN indexes - CPAN, BackPAN etc
-var indexes map[string]*gopan.Source
+// GoPAN indexes - CPAN, BackPAN etc - map[config.name]map[source.name]*Source
+var indexes map[string]map[string]*gopan.Source
 
 // Maps authors by id (A -> AB -> ABC)
 var mapped = make(map[string]map[string]map[string]map[string]*gopan.Author)

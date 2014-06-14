@@ -42,47 +42,49 @@ func getAuthors() int {
 
 	log.Info("Building author list")
 
-	for _, source := range indexes {
-		log.Info("Generating index: %s", source.Name)
-		wg.Add(1)
-		go func(source *gopan.Source) {
-			defer wg.Done()
-			for _, p1 := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
-				wg.Add(1)
-				go func(p1 rune, source *gopan.Source) {
-					defer wg.Done()
-					for _, p2 := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
-						wg.Add(1)
-						go func(p2 rune) {
-							defer wg.Done()
-							sem <- 1
+	for fname, _ := range indexes {
+		for _, source := range indexes[fname] {
+			log.Info("Generating index: %s", source.Name)
+			wg.Add(1)
+			go func(source *gopan.Source) {
+				defer wg.Done()
+				for _, p1 := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
+					wg.Add(1)
+					go func(p1 rune, source *gopan.Source) {
+						defer wg.Done()
+						for _, p2 := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
+							wg.Add(1)
+							go func(p2 rune) {
+								defer wg.Done()
+								sem <- 1
 
-							log.Trace("=> %s%s", string(p1), string(p2))
+								log.Trace("=> %s%s", string(p1), string(p2))
 
-							url := source.URL + "/" + string(p1) + "/" + string(p1) + string(p2) + "/"
-							log.Trace("Getting URL: %s", url)
+								url := source.URL + "/" + string(p1) + "/" + string(p1) + string(p2) + "/"
+								log.Trace("Getting URL: %s", url)
 
-							res, err := http.Get(url)
-							if err != nil {
-								log.Error("HTTP GET - %s", err.Error())
+								res, err := http.Get(url)
+								if err != nil {
+									log.Error("HTTP GET - %s", err.Error())
+									<-sem
+									return
+								}
+
+								doc, err := html.Parse(res.Body)
+								if err != nil {
+									log.Error("HTML PARSE - %s", err.Error())
+									<-sem
+									return
+								}
+
+								al(doc, source, string(p1)+string(p2))
 								<-sem
-								return
-							}
-
-							doc, err := html.Parse(res.Body)
-							if err != nil {
-								log.Error("HTML PARSE - %s", err.Error())
-								<-sem
-								return
-							}
-
-							al(doc, source, string(p1)+string(p2))
-							<-sem
-						}(p2)
-					}
-				}(p1, source)
-			}
-		}(source)
+							}(p2)
+						}
+					}(p1, source)
+				}
+			}(source)
+		}
 	}
 	wg.Wait()
 

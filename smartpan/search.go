@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
 	"github.com/ian-kent/gotcha/http"
 	"html/template"
@@ -33,70 +34,76 @@ func search(session *http.Session) {
 
 		tStart := time.Now().UnixNano()
 
+		log.Trace("Searching for [%s]", query)
+
 		var wg sync.WaitGroup
 
-		for _, idx := range indexes {
-			wg.Add(1)
-			go func(idx *gopan.Source) {
-				defer wg.Done()
+		for fname, _ := range indexes {
+			log.Trace("=> Searching file: %s", fname)
+			for _, idx := range indexes[fname] {
+				log.Trace("=> Searching index: %s", idx.Name)
+				wg.Add(1)
+				go func(idx *gopan.Source) {
+					defer wg.Done()
 
-				if strings.Contains(strings.ToLower(idx.Name), query) {
-					lock.Lock()
-					results = append(results, &SearchResult{
-						Name:  idx.Name,
-						Type:  "Index",
-						URL:   idx.Name,
-						Obj:   idx,
-						Glyph: "list",
-					})
-					lock.Unlock()
-				}
+					if strings.Contains(strings.ToLower(idx.Name), query) {
+						lock.Lock()
+						results = append(results, &SearchResult{
+							Name:  idx.Name,
+							Type:  "Index",
+							URL:   idx.Name,
+							Obj:   idx,
+							Glyph: "list",
+						})
+						lock.Unlock()
+					}
 
-				for _, auth := range idx.Authors {
-					wg.Add(1)
-					go func(idx *gopan.Source, auth *gopan.Author) {
-						defer wg.Done()
+					for _, auth := range idx.Authors {
+						wg.Add(1)
+						go func(idx *gopan.Source, auth *gopan.Author) {
+							defer wg.Done()
 
-						if strings.Contains(strings.ToLower(auth.Name), query) {
-							lock.Lock()
-							results = append(results, &SearchResult{
-								Name:  auth.Name,
-								Type:  "Author",
-								URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name,
-								Obj:   auth,
-								Glyph: "user",
-							})
-							lock.Unlock()
-						}
-						for _, pkg := range auth.Packages {
-							if strings.Contains(strings.ToLower(pkg.Name), query) {
+							if strings.Contains(strings.ToLower(auth.Name), query) {
 								lock.Lock()
 								results = append(results, &SearchResult{
-									Name:  pkg.Name,
-									Type:  "Module",
-									URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
-									Obj:   pkg,
-									Glyph: "compressed",
+									Name:  auth.Name,
+									Type:  "Author",
+									URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name,
+									Obj:   auth,
+									Glyph: "user",
 								})
 								lock.Unlock()
 							}
-							for _, prov := range pkg.Provides {
-								if strings.Contains(strings.ToLower(prov.Name), query) {
+							for _, pkg := range auth.Packages {
+								if strings.Contains(strings.ToLower(pkg.Name), query) {
 									lock.Lock()
 									results = append(results, &SearchResult{
-										Name:  prov.Name,
-										Type:  "Package",
-										URL:   idx.Name + "/modules/" + strings.Replace(prov.Name, "::", "/", -1),
-										Obj:   prov,
-										Glyph: "briefcase",
+										Name:  pkg.Name,
+										Type:  "Module",
+										URL:   idx.Name + "/authors/id/" + auth.Name[:1] + "/" + auth.Name[:2] + "/" + auth.Name + "/" + pkg.Name,
+										Obj:   pkg,
+										Glyph: "compressed",
 									})
 									lock.Unlock()
 								}
+								for _, prov := range pkg.Provides {
+									if strings.Contains(strings.ToLower(prov.Name), query) {
+										lock.Lock()
+										results = append(results, &SearchResult{
+											Name:  prov.Name,
+											Type:  "Package",
+											URL:   idx.Name + "/modules/" + strings.Replace(prov.Name, "::", "/", -1),
+											Obj:   prov,
+											Glyph: "briefcase",
+										})
+										lock.Unlock()
+									}
+								}
 							}
-						}
-					}(idx, auth)
-				}
-			}(idx)
+						}(idx, auth)
+					}
+				}(idx)
+			}
 		}
 
 		wg.Wait()

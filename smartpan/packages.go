@@ -31,9 +31,11 @@ func pkgindex(session *http.Session) {
 
 	repo := session.Stash["repo"].(string)
 
-	if _, ok := indexes[repo]; !ok && repo != "SmartPAN" {
-		session.RenderNotFound()
-		return
+	for fname, _ := range indexes {
+		if _, ok := indexes[fname][repo]; !ok && repo != "SmartPAN" {
+			session.RenderNotFound()
+			return
+		}
 	}
 
 	if g, ok := session.Stash["gz"]; ok {

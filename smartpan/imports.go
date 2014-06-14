@@ -361,9 +361,9 @@ func do_import(session *http.Session, job *ImportJob) {
 			}
 		}
 
-		if _, ok := indexes[reponame]; !ok {
+		if _, ok := indexes[config.Index][reponame]; !ok {
 			msg(" | Creating index: " + reponame)
-			indexes[reponame] = &gopan.Source{
+			indexes[config.Index][reponame] = &gopan.Source{
 				Name:    reponame,
 				URL:     "/authors/id",
 				Authors: make(map[string]*gopan.Author),
@@ -372,15 +372,15 @@ func do_import(session *http.Session, job *ImportJob) {
 			mapped[reponame] = make(map[string]map[string]map[string]*gopan.Author)
 		}
 
-		if _, ok := indexes[reponame].Authors[auth]; !ok {
+		if _, ok := indexes[config.Index][reponame].Authors[auth]; !ok {
 			msg(" | Creating author: " + auth)
 			author := &gopan.Author{
-				Source:   indexes[reponame],
+				Source:   indexes[config.Index][reponame],
 				Name:     auth,
 				Packages: make(map[string]*gopan.Package),
 				URL:      "/authors/id/" + auth[:1] + "/" + auth[:2] + "/" + auth + "/",
 			}
-			indexes[reponame].Authors[auth] = author
+			indexes[config.Index][reponame].Authors[auth] = author
 
 			// author name
 			if _, ok := mapped[reponame][author.Name[:1]]; !ok {
@@ -411,21 +411,21 @@ func do_import(session *http.Session, job *ImportJob) {
 			mapped[reponame]["*"][author.Name[:2]][author.Name] = author
 		}
 
-		if _, ok := indexes[reponame].Authors[auth].Packages[fn]; !ok {
+		if _, ok := indexes[config.Index][reponame].Authors[auth].Packages[fn]; !ok {
 			msg(" | Creating module: " + fn)
-			indexes[reponame].Authors[auth].Packages[fn] = &gopan.Package{
-				Author:   indexes[reponame].Authors[auth],
+			indexes[config.Index][reponame].Authors[auth].Packages[fn] = &gopan.Package{
+				Author:   indexes[config.Index][reponame].Authors[auth],
 				Name:     fn,
-				URL:      indexes[reponame].Authors[auth].URL + fn,
+				URL:      indexes[config.Index][reponame].Authors[auth].URL + fn,
 				Provides: make(map[string]*gopan.PerlPackage),
 			}
 
 			msg(" | Getting list of packages")
 			modnm := strings.TrimSuffix(fn, ".tar.gz")
-			pkg := indexes[reponame].Authors[auth].Packages[fn]
+			pkg := indexes[config.Index][reponame].Authors[auth].Packages[fn]
 			pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir)
 
-			//pkg := indexes[reponame].Authors[auth].Packages[fn]
+			//pkg := indexes[config.Index][reponame].Authors[auth].Packages[fn]
 			msg(" | Adding packages to index")
 			if _, ok := idxpackages[reponame]; !ok {
 				idxpackages[reponame] = make(map[string]*PkgSpace)
@@ -463,7 +463,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			}
 
 			msg(" | Writing to index file")
-			gopan.AppendToIndex(config.CacheDir+"/"+config.Index, indexes[reponame], indexes[reponame].Authors[auth], indexes[reponame].Authors[auth].Packages[fn])
+			gopan.AppendToIndex(config.CacheDir+"/"+config.Index, indexes[config.Index][reponame], indexes[config.Index][reponame].Authors[auth], indexes[config.Index][reponame].Authors[auth].Packages[fn])
 		}
 
 		msg(" | Imported module")
