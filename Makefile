@@ -1,8 +1,11 @@
 all: deps install
 
 deps:
-	go get github.com/ian-kent/gotcha/gotcha
-	go get github.com/ian-kent/go-log/log
+	go get github.com/ian-kent/gotcha/...
+	go get github.com/ian-kent/go-log/...
+	go get github.com/mitchellh/gox
+	go get code.google.com/p/go.net/html
+	go get gopkg.in/yaml.v1
 
 install:
 	go install ./pandex
