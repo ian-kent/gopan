@@ -28,27 +28,27 @@ type Config struct {
 }
 
 func (c *Config) Dump() {
-	log.Info("GoPAN configuration:")
+	log.Debug("GoPAN configuration:")
 
-	log.Info("=> Sources")
+	log.Debug("=> Sources")
 	for _, s := range c.Sources {
-		log.Info(" - %s", s)
+		log.Debug(" - %s", s)
 	}
 
-	log.Info("=> Test")
+	log.Debug("=> Test")
 	if c.Test.Global {
-		log.Info(" - Global tests are enabled")
+		log.Debug(" - Global tests are enabled")
 	} else {
-		log.Info(" - Global tests are disabled")
+		log.Debug(" - Global tests are disabled")
 		for m, _ := range c.Test.Modules {
-			log.Info(" - %s tests are enabled", m)
+			log.Debug(" - %s tests are enabled", m)
 		}
 	}
 
-	log.Info("=> NoInstall: %t", c.NoInstall)
-	log.Info("=> CPANFile: %s", c.CPANFile)
-	log.Info("=> LogLevel: %s", c.LogLevel)
-	log.Info("=> Parallelism: %d", c.CPUs)
+	log.Debug("=> NoInstall: %t", c.NoInstall)
+	log.Debug("=> CPANFile: %s", c.CPANFile)
+	log.Debug("=> LogLevel: %s", c.LogLevel)
+	log.Debug("=> Parallelism: %d", c.CPUs)
 }
 
 func DefaultSources(cpan bool, backpan bool) []*Source {
@@ -118,8 +118,6 @@ func Configure() *Config {
 	flag.StringVar(&loglayout, "loglayout", loglayout, "Log layout (for github.com/ian-kent/go-log pattern layout)")
 
 	flag.Parse()
-
-	log.Info("GoPAN configuration:")
 
 	if nocpan || nobackpan {
 		conf.Sources = DefaultSources(!nocpan, !nobackpan)

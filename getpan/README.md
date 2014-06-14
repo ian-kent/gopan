@@ -36,6 +36,14 @@ If you have a [SmartPAN](../smartpan/README.md), pass in the URL with `-smart`:
 
     getpan -smart http://your.smartpan:7050
 
+You can also install modules from the command line:
+
+    getpan Some::Module Another::Module
+
+Use `getpan exec` to configure your environment:
+
+    getpan exec perl ./your_app.pl
+
 ## Command line options
 
 | Option            | Example                          | Description

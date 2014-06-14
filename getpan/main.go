@@ -4,13 +4,42 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/getpan/getpan"
 	"flag"
+	"strings"
+	"os/exec"
+	"os"
 )
 
 var config *getpan.Config
 
 func main() {
 	config = getpan.Configure()
+
+	log.Debug("GoPAN configuration:")
 	config.Dump()
+
+	mods := flag.Args()
+
+	if len(mods) > 0 && mods[0] == "exec" {
+		log.Debug("getpan exec => " + strings.Join(mods[1:], " "))
+
+		cmd := exec.Command(mods[1], mods[2:]...)
+
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, "PERL5LIB=./local/lib/perl5")
+		cmd.Env = append(cmd.Env, "PATH=$PATH:./local/bin")
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err := cmd.Run()
+
+		if err != nil {
+			// debug so it doesn't show up in stdout/stderr unless -loglevel is used
+			log.Debug("Error in exec: %s", err.Error())
+		}
+
+		return
+	}
 
 	for _, source := range config.Sources {
 		err := source.Load()
@@ -19,8 +48,6 @@ func main() {
 			return // TODO exit code?
 		}
 	}
-
-	mods := flag.Args()
 
 	var deps *getpan.DependencyList
 
