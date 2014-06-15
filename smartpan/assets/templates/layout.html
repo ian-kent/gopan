@@ -45,7 +45,7 @@
 		            <li><a href="#">{{ .summary.Packages }} Packages</a></li>
 		          </ul>
 		        </li>
-                  <!--<li{{ if eq .Page "Settings" }} class="active"{{end}}><a href="/settings"><span class="glyphicon glyphicon-wrench"></span> Settings</a></li>-->
+                  <li{{ if eq .Page "Settings" }} class="active"{{end}}><a href="/settings"><span class="glyphicon glyphicon-wrench"></span> Settings</a></li>
                   {{ if .config.CanUpdate }}
                   <li><a href="/settings"><span class="glyphicon glyphicon-info-sign"></span> Update available</a></li>
                   {{ end }}

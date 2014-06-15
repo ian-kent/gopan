@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	nethttp "net/http"
+	"os"
 	"strings"
 	"sync"
 )
@@ -33,8 +34,23 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		// Load our secondary indexes
 		indexes = make(map[string]map[string]*gopan.Source)
+
+		// Load CPAN index
+		if fi, err := os.Stat(config.CacheDir + "/" + config.CPANIndex); err == nil {
+			config.HasCPANIndex = true
+			config.CPANIndexDate = fi.ModTime().String()
+			indexes[config.CPANIndex] = gopan.LoadIndex(config.CacheDir + "/" + config.CPANIndex)
+		}
+
+		// Load BackPAN index
+		if fi, err := os.Stat(config.CacheDir + "/" + config.BackPANIndex); err == nil {
+			config.HasBackPANIndex = true
+			config.BackPANIndexDate = fi.ModTime().String()
+			indexes[config.BackPANIndex] = gopan.LoadIndex(config.CacheDir + "/" + config.BackPANIndex)
+		}
+
+		// Load our secondary indexes
 		for _, idx := range config.Indexes {
 			indexes[idx] = gopan.LoadIndex(config.CacheDir + "/" + idx)
 		}

@@ -43,7 +43,7 @@ func main() {
 			}
 		}
 
-		if len(indexes[config.Index]) == 0 && !config.CPAN && !config.BackPAN {
+		if len(config.Sources) == 0 && !config.CPAN && !config.BackPAN {
 			log.Debug("No -source, -cpan, -backpan parameters, adding default CPAN/BackPAN")
 			config.CPAN = true
 			config.BackPAN = true

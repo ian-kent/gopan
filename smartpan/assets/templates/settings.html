@@ -10,3 +10,31 @@
 	<a href="{{ .config.UpdateURL }}">Version {{ .config.LatestRelease }} is available on GitHub.</a>
 </div>
 {{ end }}
+
+{{ if not .config.HasCPANIndex }}
+<h3>Get the CPAN index</h3>
+<p>If you want to host a CPAN mirror without actually mirroring CPAN, download the index file to use readthrough.</p>
+<form action="/get-index/CPAN" method="post">
+<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download CPAN index file</button>
+</form>
+{{ else }}
+<h3>Update the CPAN index</h3>
+<p>Your CPAN index file is from {{ .config.CPANIndexDate }}</p>
+<form action="/get-index/CPAN" method="post">
+<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-download-alt"></span> Update CPAN index file</button>
+</form>
+{{ end }}
+
+{{ if not .config.HasBackPANIndex }}
+<h3>Get the BackPAN index</h3>
+<p>If you want to host a BackPAN mirror without actually mirroring BackPAN, download the index file to use readthrough.</p>
+<form action="/get-index/BackPAN" method="post">
+<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download BackPAN index file</button>
+</form>
+{{ else }}
+<h3>Update the BackPAN index</h3>
+<p>Your BackPAN index file is from {{ .config.BackPANIndexDate }}</p>
+<form action="/get-index/BackPAN" method="post">
+<button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-download-alt"></span> Update BackPAN index file</button>
+</form>
+{{ end }}

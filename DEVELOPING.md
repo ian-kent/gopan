@@ -17,6 +17,16 @@ and PANdex are also independent Go libraries.
 | [getpan/getpan](getpan/getpan) | Resolves cpanfile and module dependencies
 | [pandex/pandex](pandex/pandex) | Indexes modules and packages in a gopancache directory
 
+### The index file
+
+The index file behaves more like a transaction log.
+
+As the index changes in-memory, those changes are written to the log.
+
+Removals can be written by prefixing the line (after the initial indent) with a `-`.
+
+The index file can be flattened using the `-flatten` option in [PANdex](../pandex/README.md)
+
 ### get_perl_core.sh
 
 If you want to change the version of Perl supported by GoPAN, run `./get_perl_core.sh`
