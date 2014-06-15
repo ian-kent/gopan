@@ -291,11 +291,13 @@ func do_import(session *http.Session, job *ImportJob) {
 				return
 			}
 
-			npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
+			npath := config.CacheDir + "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
 			_, fn = filepath.Split(fn)
 			nfile := npath + "/" + fn
 
 			msg("Caching to " + nfile)
+
+			os.MkdirAll(npath, 0777)
 
 			_, err := CopyToFile(nfile, f)
 			if err != nil {
