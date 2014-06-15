@@ -4,7 +4,9 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gotcha/http"
 	"io/ioutil"
+	nethttp "net/http"
 	"os"
+	"strings"
 )
 
 func download(session *http.Session) {
@@ -35,6 +37,39 @@ func download(session *http.Session) {
 	log.Debug("Repo [%s], file [%s]", repo, file)
 
 	nfile := config.CacheDir + "/" + repo + "/" + file
+
+	if _, err := os.Stat(nfile); err != nil {
+		log.Debug("File not found on disk, considering readthrough")
+
+		for fn, _ := range indexes {
+			log.Debug("Trying file: %s", fn)
+			if src, ok := indexes[fn][repo]; ok {
+				log.Debug("Found matching repo")
+				if strings.HasPrefix(src.URL, "http:") {
+					log.Debug("Found HTTP URL, trying: %s", src.URL+"/"+file)
+
+					res, err := nethttp.Get(src.URL + "/" + file)
+					if err != nil {
+						log.Debug("Error on readthrough: %s", err.Error())
+						continue
+					}
+					defer res.Body.Close()
+					b, err := ioutil.ReadAll(res.Body)
+					if err != nil {
+						log.Debug("Error reading body: %s", err.Error())
+						continue
+					}
+
+					session.Response.Write(b)
+					return
+				}
+			}
+		}
+
+		log.Debug("No readthrough available")
+		session.RenderNotFound()
+		return
+	}
 
 	f, err := os.Open(nfile)
 	if err != nil {

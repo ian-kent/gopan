@@ -482,6 +482,10 @@ func (m *Module) Download() error {
 			return err
 		}
 
+		if resp.StatusCode != 200 {
+			return errors.New("404 not found")
+		}
+
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
 			return err
