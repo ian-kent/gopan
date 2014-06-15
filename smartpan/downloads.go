@@ -34,7 +34,7 @@ func download(session *http.Session) {
 
 	log.Debug("Repo [%s], file [%s]", repo, file)
 
-	nfile := ".gopancache/" + repo + "/" + file
+	nfile := config.CacheDir + "/" + repo + "/" + file
 
 	f, err := os.Open(nfile)
 	if err != nil {

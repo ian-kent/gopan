@@ -147,7 +147,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			return
 		}
 
-		npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
+		npath := config.CacheDir + "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
 		_, fn := filepath.Split(job.Form.ImportURL)
 		nfile := npath + "/" + fn
 
@@ -224,7 +224,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			return
 		}
 
-		npath := ".gopancache/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
+		npath := config.CacheDir + "/authors/id/" + nauth[:1] + "/" + nauth[:2] + "/" + nauth
 		_, fn := filepath.Split(job.Form.FromDir)
 		nfile := npath + "/" + fn
 
