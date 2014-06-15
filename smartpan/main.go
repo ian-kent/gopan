@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var CurrentRelease = "0.3e"
+var CurrentRelease = "0.4"
 
 type Releases []*Release
 type Release struct {
@@ -74,11 +74,19 @@ func main() {
 
 		// Load our secondary indexes
 		for _, idx := range config.Indexes {
-			go load_index(idx, config.CacheDir+"/"+idx)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				load_index(idx, config.CacheDir+"/"+idx)
+			}()
 		}
 
 		// Load our primary index (this is the only index written back to)
-		go load_index(config.Index, config.CacheDir+"/"+config.Index)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			load_index(config.Index, config.CacheDir+"/"+config.Index)
+		}()
 	}()
 
 	update_indexes = func() {

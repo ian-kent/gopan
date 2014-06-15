@@ -384,6 +384,10 @@ func do_import(session *http.Session, job *ImportJob) {
 			}
 			indexes[config.Index][reponame].Authors[auth] = author
 
+			if _, ok := mapped[reponame]; !ok {
+				mapped[reponame] = make(map[string]map[string]map[string]*gopan.Author)
+			}
+
 			// author name
 			if _, ok := mapped[reponame][author.Name[:1]]; !ok {
 				mapped[reponame][author.Name[:1]] = make(map[string]map[string]*gopan.Author)
