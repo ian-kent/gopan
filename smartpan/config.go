@@ -23,6 +23,9 @@ type Config struct {
 	BackPANIndex     string
 	HasBackPANIndex  bool
 	BackPANIndexDate string
+
+	BackPANStatus string
+	CPANStatus    string
 }
 
 var config *Config
@@ -40,11 +43,11 @@ func configure() {
 	bind := ":7050"
 	flag.StringVar(&bind, "bind", ":7050", "Interface to bind to")
 
-	cpan := "cpan_index"
-	flag.StringVar(&cpan, "cpan", "cpan_index", "Name of CPAN index to support readthrough")
+	cpan := "cpan_index.gz"
+	flag.StringVar(&cpan, "cpan", "cpan_index.gz", "Name of CPAN index to support readthrough")
 
-	backpan := "backpan_index"
-	flag.StringVar(&backpan, "backpan", "backpan_index", "Name of BackPAN index to support readthrough")
+	backpan := "backpan_index.gz"
+	flag.StringVar(&backpan, "backpan", "backpan_index.gz", "Name of BackPAN index to support readthrough")
 
 	indexes := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&indexes), "s-index", "Secondary indexes to load (can be provided multiple times)")
@@ -68,5 +71,7 @@ func configure() {
 		BackPANIndex:     backpan,
 		HasBackPANIndex:  false,
 		BackPANIndexDate: "",
+		BackPANStatus:    "Unavailable",
+		CPANStatus:       "Unavailable",
 	}
 }

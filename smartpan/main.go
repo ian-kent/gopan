@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
 	gotcha "github.com/ian-kent/gotcha/app"
@@ -10,9 +11,11 @@ import (
 	"html/template"
 	"io/ioutil"
 	nethttp "net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var CurrentRelease = "0.3e"
@@ -23,12 +26,19 @@ type Release struct {
 	URL     string `json:"html_url"`
 }
 
+var update_indexes func()
+var load_index func(string, string)
+
 func main() {
 	configure()
 
 	config.CurrentRelease = CurrentRelease
 
 	var wg sync.WaitGroup
+
+	load_index = func(index string, file string) {
+		indexes[index] = gopan.LoadIndex(file)
+	}
 
 	wg.Add(1)
 	go func() {
@@ -40,26 +50,38 @@ func main() {
 		if fi, err := os.Stat(config.CacheDir + "/" + config.CPANIndex); err == nil {
 			config.HasCPANIndex = true
 			config.CPANIndexDate = fi.ModTime().String()
-			indexes[config.CPANIndex] = gopan.LoadIndex(config.CacheDir + "/" + config.CPANIndex)
+			config.CPANStatus = "Loading"
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				load_index(config.CPANIndex, config.CacheDir+"/"+config.CPANIndex)
+				config.CPANStatus = "Loaded"
+			}()
 		}
 
 		// Load BackPAN index
 		if fi, err := os.Stat(config.CacheDir + "/" + config.BackPANIndex); err == nil {
 			config.HasBackPANIndex = true
 			config.BackPANIndexDate = fi.ModTime().String()
-			indexes[config.BackPANIndex] = gopan.LoadIndex(config.CacheDir + "/" + config.BackPANIndex)
+			config.BackPANStatus = "Loading"
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				load_index(config.BackPANIndex, config.CacheDir+"/"+config.BackPANIndex)
+				config.BackPANStatus = "Loaded"
+			}()
 		}
 
 		// Load our secondary indexes
 		for _, idx := range config.Indexes {
-			indexes[idx] = gopan.LoadIndex(config.CacheDir + "/" + idx)
+			go load_index(idx, config.CacheDir+"/"+idx)
 		}
 
 		// Load our primary index (this is the only index written back to)
-		indexes[config.Index] = gopan.LoadIndex(config.CacheDir + "/" + config.Index)
+		go load_index(config.Index, config.CacheDir+"/"+config.Index)
 	}()
 
-	go func() {
+	update_indexes = func() {
 		wg.Wait()
 		wg.Add(1)
 		go func() {
@@ -149,7 +171,8 @@ func main() {
 				}
 			}
 		}
-	}()
+	}
+	go update_indexes()
 
 	// Get latest SmartPAN version
 	go func() {
@@ -214,6 +237,8 @@ func main() {
 	r.Get("/import/(?P<jobid>[^/]+)", import2)
 	r.Get("/import/(?P<jobid>[^/]+)/stream", importstream)
 
+	r.Post("/get-index/(?P<index>(CPAN|BackPAN))/?", getindex)
+
 	// Serve static content (but really use a CDN)
 	r.Get("/images/(?P<file>.*)", r.Static("assets/images/{{file}}"))
 	r.Get("/css/(?P<file>.*)", r.Static("assets/css/{{file}}"))
@@ -234,6 +259,103 @@ func main() {
 	app.Start()
 
 	<-make(chan int)
+}
+
+func getindex(session *http.Session) {
+	idx := session.Stash["index"]
+
+	switch idx {
+	case "CPAN":
+		go func() {
+			config.CPANStatus = "Downloading"
+
+			res, err := nethttp.Get("https://s3-eu-west-1.amazonaws.com/gopan/cpan_index.gz")
+			if err != nil {
+				log.Error("Error downloading index: %s", err.Error())
+				session.RenderException(500, errors.New("Error downloading CPAN index: "+err.Error()))
+				config.CPANStatus = "Failed"
+				return
+			}
+			defer res.Body.Close()
+			b, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Error("Error reading index: %s", err.Error())
+				session.RenderException(500, errors.New("Error reading CPAN index: "+err.Error()))
+				config.CPANStatus = "Failed"
+				return
+			}
+			fi, err := os.Create(config.CacheDir + "/" + config.CPANIndex)
+			if err != nil {
+				log.Error("Error creating output file: %s", err.Error())
+				session.RenderException(500, errors.New("Error creating output file: "+err.Error()))
+				config.CPANStatus = "Failed"
+				return
+			}
+			defer fi.Close()
+			fi.Write(b)
+
+			config.CPANStatus = "Downloaded"
+			config.HasCPANIndex = true
+			config.CPANIndexDate = time.Now().String()
+
+			config.CPANStatus = "Loading"
+			load_index(config.CPANIndex, config.CacheDir+"/"+config.CPANIndex)
+
+			config.CPANStatus = "Indexing"
+			update_indexes()
+
+			config.CPANStatus = "Loaded"
+		}()
+
+		session.Redirect(&url.URL{Path: "/settings"})
+		return
+	case "BackPAN":
+		go func() {
+			config.BackPANStatus = "Downloading"
+
+			res, err := nethttp.Get("https://s3-eu-west-1.amazonaws.com/gopan/backpan_index.gz")
+			if err != nil {
+				log.Error("Error downloading index: %s", err.Error())
+				session.RenderException(500, errors.New("Error downloading BackPAN index: "+err.Error()))
+				config.BackPANStatus = "Failed"
+				return
+			}
+			defer res.Body.Close()
+			b, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				log.Error("Error reading index: %s", err.Error())
+				session.RenderException(500, errors.New("Error reading BackPAN index: "+err.Error()))
+				config.BackPANStatus = "Failed"
+				return
+			}
+			fi, err := os.Create(config.CacheDir + "/" + config.BackPANIndex)
+			if err != nil {
+				log.Error("Error creating output file: %s", err.Error())
+				session.RenderException(500, errors.New("Error creating output file: "+err.Error()))
+				config.BackPANStatus = "Failed"
+				return
+			}
+			defer fi.Close()
+			fi.Write(b)
+
+			config.BackPANStatus = "Downloaded"
+			config.HasBackPANIndex = true
+			config.BackPANIndexDate = time.Now().String()
+
+			config.BackPANStatus = "Loading"
+			load_index(config.BackPANIndex, config.CacheDir+"/"+config.BackPANIndex)
+
+			config.BackPANStatus = "Indexing"
+			update_indexes()
+
+			config.BackPANStatus = "Loaded"
+		}()
+
+		session.Redirect(&url.URL{Path: "/settings"})
+		return
+	}
+
+	session.RenderNotFound()
 }
 
 func help(session *http.Session) {

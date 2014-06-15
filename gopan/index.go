@@ -1,6 +1,7 @@
 package gopan
 
 import (
+	"compress/gzip"
 	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
 	"os"
@@ -96,10 +97,32 @@ func LoadIndex(index string) map[string]*Source {
 		return indexes
 	}
 
-	bytes, err := ioutil.ReadFile(index)
-	if err != nil {
-		log.Error("Error reading index: %s", err.Error())
-		return indexes
+	var bytes []byte
+	if strings.HasSuffix(index, ".gz") {
+		fi, err := os.Open(index)
+		if err != nil {
+			log.Error("Error reading index: %s", err.Error())
+			return indexes
+		}
+		defer fi.Close()
+		gz, err := gzip.NewReader(fi)
+		if err != nil {
+			log.Error("Error creating gzip reader: %s", err.Error())
+			return indexes
+		}
+
+		bytes, err = ioutil.ReadAll(gz)
+		if err != nil {
+			log.Error("Error reading from gzip: %s", err.Error())
+			return indexes
+		}
+	} else {
+		var err error
+		bytes, err = ioutil.ReadFile(index)
+		if err != nil {
+			log.Error("Error reading index: %s", err.Error())
+			return indexes
+		}
 	}
 
 	lines := strings.Split(string(bytes), "\n")
