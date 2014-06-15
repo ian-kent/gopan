@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-var CurrentRelease = "0.3b"
+var CurrentRelease = "0.3c"
 
 type Releases []*Release
 type Release struct {
