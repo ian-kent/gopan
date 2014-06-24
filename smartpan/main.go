@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"flag"
+	"bytes"
 )
 
 var CurrentRelease = "0.4"
@@ -31,6 +33,69 @@ var load_index func(string, string)
 
 func main() {
 	configure()
+
+	args := flag.Args()
+	if len(args) > 0 && args[0] == "import" {
+		if len(args) < 4 {
+			log.Error("Invalid arguments, expecting: smartpan import FILE AUTHORID INDEX")
+			return
+		}
+
+		fname := args[1]
+		log.Info("Importing module from %s", fname)
+		log.Info("Index    : %s", args[2])
+		log.Info("Author ID: %s", args[3])
+
+		extraParams := map[string]string{
+			"importinto": args[3],
+			"authorid": args[2],
+			"newindex": "",
+			"cpanmirror": "",
+			"importurl": "",
+			"fromdir": "",
+		}
+
+		if strings.HasPrefix(fname, "http://") || strings.HasPrefix(fname, "https://") {
+			log.Info("URL: %s", fname)
+
+			// TODO
+		} else {
+			fname = strings.TrimPrefix(fname, "file://")
+			log.Info("File: %s", fname)
+
+			if _, err := os.Stat(fname); err != nil {
+				log.Error("File not found: %s", err.Error())
+				return
+			}
+
+			request, err := newfileUploadRequest(config.RemoteHost + "/import?stream=y", extraParams, "fromfile", fname)
+			if err != nil {
+				log.Error("Create upload error: %s", err.Error())
+				return
+			}
+
+			client := &nethttp.Client{}
+			resp, err := client.Do(request)
+			if err != nil {
+				log.Error("Error connecting to host: %s", err.Error())
+				return
+			} else {
+				// TODO stream this
+				body := &bytes.Buffer{}
+				_, err := body.ReadFrom(resp.Body)
+				if err != nil {
+					log.Error("Error reading response: %s", err.Error())
+					return
+				}
+		        resp.Body.Close()
+				//log.Info("%d", resp.StatusCode)
+				//log.Info("%s", resp.Header)
+				log.Info("%s", body.String())
+			}
+		}
+
+		return
+	}
 
 	config.CurrentRelease = CurrentRelease
 

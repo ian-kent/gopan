@@ -26,6 +26,9 @@ type Config struct {
 
 	BackPANStatus string
 	CPANStatus    string
+
+	// For some command line commands, e.g. `smartpan import`
+	RemoteHost    string
 }
 
 var config *Config
@@ -48,6 +51,9 @@ func configure() {
 
 	backpan := "backpan_index.gz"
 	flag.StringVar(&backpan, "backpan", "backpan_index.gz", "Name of BackPAN index to support readthrough")
+
+	remote := "http://localhost:7050"
+	flag.StringVar(&remote, "remote", "http://localhost:7050", "Remote host and port to connect to")
 
 	indexes := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&indexes), "s-index", "Secondary indexes to load (can be provided multiple times)")
@@ -73,5 +79,6 @@ func configure() {
 		BackPANIndexDate: "",
 		BackPANStatus:    "Unavailable",
 		CPANStatus:       "Unavailable",
+		RemoteHost:       remote,
 	}
 }

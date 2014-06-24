@@ -52,6 +52,8 @@ func import1(session *http.Session) {
 	f := form.New(session, m)
 	session.Stash["fh"] = f
 
+	log.Info("Headers: %s", session.Request.Header())
+
 	if session.Request.Method != "POST" {
 		render_import(session)
 		return
@@ -101,7 +103,11 @@ func import1(session *http.Session) {
 	go do_import(session, job)
 
 	//render_import(session)
-	session.Redirect(&url.URL{Path: "/import/" + job.Id})
+	if _, ok := session.Request.Form()["stream"]; ok {
+		session.Redirect(&url.URL{Path: "/import/" + job.Id + "/stream", RawQuery: "raw=y"})
+	} else {
+		session.Redirect(&url.URL{Path: "/import/" + job.Id})
+	}
 }
 
 func do_import(session *http.Session, job *ImportJob) {
@@ -547,11 +553,22 @@ func importstream(session *http.Session) {
 
 	session.Response.Headers.Add("Content-Type", "text/plain")
 
-	header, _ := session.RenderTemplate("layout_streamstart.html")
-	c <- []byte(header)
+	raw := false
+	if _, ok := session.Request.Form()["raw"]; ok {
+		raw = true
+	}
+
+	if !raw {
+		header, _ := session.RenderTemplate("layout_streamstart.html")
+		c <- []byte(header)
+	}
 
 	for _, s := range job.History {
-		c <- []byte(s + "<br />\n")
+		if !raw {
+			c <- []byte(s + "<br />\n")
+		} else {
+			c <- []byte(s + "\n")
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -562,14 +579,20 @@ func importstream(session *http.Session) {
 				wg.Done()
 				return
 			}
-			c <- []byte(m + "<br />\n")
+			if !raw {
+				c <- []byte(m + "<br />\n")
+			} else {
+				c <- []byte(m + "\n")
+			}
 		})
 	}
 
 	wg.Wait()
 
-	footer, _ := session.RenderTemplate("layout_streamend.html")
-	c <- []byte(footer)
+	if !raw {
+		footer, _ := session.RenderTemplate("layout_streamend.html")
+		c <- []byte(footer)
+	}
 
 	c <- make([]byte, 0)
 }
