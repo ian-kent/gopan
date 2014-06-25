@@ -17,6 +17,9 @@ by GetPAN for more effective dependency resolution.
   - other CPAN mirrors
   - URL or local disk
   - Upload with curl or a web browser
+  - Command line
+    - From local file or URL
+    - To local or remote SmartPAN
 - Search by
   - module name
   - release archive name
@@ -24,9 +27,6 @@ by GetPAN for more effective dependency resolution.
 - SmartPAN index
   - exposes latest modules across all indexes
   - can also be used as a CPAN mirror
-- Command line import
-  - To local or remote SmartPAN
-  - From local file or URL
 
 ## Getting started
 
