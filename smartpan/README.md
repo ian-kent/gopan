@@ -24,6 +24,9 @@ by GetPAN for more effective dependency resolution.
 - SmartPAN index
   - exposes latest modules across all indexes
   - can also be used as a CPAN mirror
+- Command line import
+  - To local or remote SmartPAN
+  - From local file or URL
 
 ## Getting started
 
@@ -50,8 +53,23 @@ You can also use the SmartPAN index URL:
 | -h                | -h                               | Display usage information
 | -bind             | -bind 0.0.0.0:7050               | The interface and port to bind to
 | -cachedir         | -cachedir .gopancache            | Set the cache directory
+| -cpan             | -cpan "some_index.gz"            | Name of CPAN index to support readthrough
 | -index            | -index index                     | The name of the index file
 | -loglevel         | -loglevel=TRACE                  | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
+| -remote           | -remote=http://somewhere:7050    | Set the remote SmartPAN
+| -s-index          | -s-index="index_name"            | Secondary indexes to load
+
+### Importing from the command line
+
+You can import modules from the command line using SmartPAN.
+
+    smartpan import /path/to/File-0.01.tar.gz AUTHORID IndexName
+    smartpan import http://somewhere/File-0.01.tar.gz AUTHORID IndexName
+
+You can also import into remote SmartPAN hosts.
+
+    smartpan -remote http://smartpan:7050 /path/to/File-0.01.tar.gz AUTHORID IndexName
+    smartpan -remote http://smartpan:7050 import http://somewhere/File-0.01.tar.gz AUTHORID IndexName
 
 ## HTTP API
 
