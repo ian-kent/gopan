@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-var CurrentRelease = "0.4"
+var CurrentRelease = "0.4b"
 
 type Releases []*Release
 type Release struct {
