@@ -28,7 +28,7 @@ type Config struct {
 	CPANStatus    string
 
 	// For some command line commands, e.g. `smartpan import`
-	RemoteHost    string
+	RemoteHost string
 }
 
 var config *Config

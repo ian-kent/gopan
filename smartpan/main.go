@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
 	gotcha "github.com/ian-kent/gotcha/app"
@@ -16,8 +18,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"flag"
-	"bytes"
 )
 
 var CurrentRelease = "0.4"
@@ -48,17 +48,43 @@ func main() {
 
 		extraParams := map[string]string{
 			"importinto": args[3],
-			"authorid": args[2],
-			"newindex": "",
+			"authorid":   args[2],
+			"newindex":   "",
 			"cpanmirror": "",
-			"importurl": "",
-			"fromdir": "",
+			"importurl":  "",
+			"fromdir":    "",
 		}
 
 		if strings.HasPrefix(fname, "http://") || strings.HasPrefix(fname, "https://") {
 			log.Info("URL: %s", fname)
 
-			// TODO
+			extraParams["importurl"] = fname
+
+			request, err := newFormPostRequest(config.RemoteHost+"/import?stream=y", extraParams)
+			if err != nil {
+				log.Error("Create request error: %s", err.Error())
+				return
+			}
+
+			client := &nethttp.Client{}
+			resp, err := client.Do(request)
+
+			if err != nil {
+				log.Error("Error connecting to host: %s", err.Error())
+				return
+			} else {
+				// TODO stream this
+				body := &bytes.Buffer{}
+				_, err := body.ReadFrom(resp.Body)
+				if err != nil {
+					log.Error("Error reading response: %s", err.Error())
+					return
+				}
+				resp.Body.Close()
+				//log.Info("%d", resp.StatusCode)
+				//log.Info("%s", resp.Header)
+				log.Info("%s", body.String())
+			}
 		} else {
 			fname = strings.TrimPrefix(fname, "file://")
 			log.Info("File: %s", fname)
@@ -68,7 +94,7 @@ func main() {
 				return
 			}
 
-			request, err := newfileUploadRequest(config.RemoteHost + "/import?stream=y", extraParams, "fromfile", fname)
+			request, err := newfileUploadRequest(config.RemoteHost+"/import?stream=y", extraParams, "fromfile", fname)
 			if err != nil {
 				log.Error("Create upload error: %s", err.Error())
 				return
@@ -87,7 +113,7 @@ func main() {
 					log.Error("Error reading response: %s", err.Error())
 					return
 				}
-		        resp.Body.Close()
+				resp.Body.Close()
 				//log.Info("%d", resp.StatusCode)
 				//log.Info("%s", resp.Header)
 				log.Info("%s", body.String())
