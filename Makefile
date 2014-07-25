@@ -1,4 +1,7 @@
-all: deps install
+all: deps install fmt
+
+fmt:
+	go fmt ./...
 
 deps:
 	go get github.com/ian-kent/gotcha/...

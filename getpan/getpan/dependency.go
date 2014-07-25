@@ -651,10 +651,10 @@ func (m *Module) getCmd() *exec.Cmd {
 	var c *exec.Cmd
 	if _, ok := config.Test.Modules[m.Name]; ok || config.Test.Global {
 		log.Trace("Executing cpanm install without --notest flag for %s", m.Cached)
-		c = exec.Command("cpanm", "-l", "./local", m.Cached)
+		c = exec.Command("cpanm", "-L", config.InstallDir, m.Cached)
 	} else {
 		log.Trace("Executing cpanm install with --notest flag for %s", m.Cached)
-		c = exec.Command("cpanm", "--notest", "-l", "./local", m.Cached)
+		c = exec.Command("cpanm", "--notest", "-L", config.InstallDir, m.Cached)
 	}
 	return c
 }

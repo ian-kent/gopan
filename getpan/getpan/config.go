@@ -18,13 +18,14 @@ type TestConfig struct {
 }
 
 type Config struct {
-	Sources   []*Source
-	Test      *TestConfig
-	NoInstall bool
-	CPANFile  string
-	LogLevel  string
-	CPUs      int
-	CacheDir  string
+	Sources    []*Source
+	Test       *TestConfig
+	NoInstall  bool
+	CPANFile   string
+	LogLevel   string
+	CPUs       int
+	CacheDir   string
+	InstallDir string
 }
 
 func (c *Config) Dump() {
@@ -49,6 +50,7 @@ func (c *Config) Dump() {
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
+	log.Debug("=> InstallDir: %d", c.InstallDir)
 }
 
 func DefaultSources(cpan bool, backpan bool) []*Source {
@@ -70,10 +72,11 @@ func DefaultConfig() *Config {
 			Global:  false,
 			Modules: make(map[string]bool),
 		},
-		NoInstall: false,
-		LogLevel:  "INFO",
-		CPUs:      runtime.NumCPU(),
-		CacheDir:  ".gopancache",
+		NoInstall:  false,
+		LogLevel:   "INFO",
+		CPUs:       runtime.NumCPU(),
+		CacheDir:   ".gopancache",
+		InstallDir: "./local",
 	}
 	return config
 }
@@ -117,6 +120,9 @@ func Configure() *Config {
 	loglayout := "[%d] [%p] %m"
 	flag.StringVar(&loglayout, "loglayout", loglayout, "Log layout (for github.com/ian-kent/go-log pattern layout)")
 
+	installdir := "./local"
+	flag.StringVar(&installdir, "installdir", installdir, "Install directory for CPAN modules")
+
 	flag.Parse()
 
 	if nocpan || nobackpan {
@@ -155,6 +161,9 @@ func Configure() *Config {
 
 	// noinstall
 	conf.NoInstall = noinstall
+
+	// install dir
+	conf.InstallDir = installdir
 
 	// log level and layout
 	log.Logger().Appender().SetLayout(layout.Pattern(loglayout))

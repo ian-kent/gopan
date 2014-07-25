@@ -25,8 +25,8 @@ func main() {
 		cmd := exec.Command(mods[1], mods[2:]...)
 
 		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, "PERL5LIB=./local/lib/perl5")
-		cmd.Env = append(cmd.Env, "PATH=$PATH:./local/bin")
+		cmd.Env = append(cmd.Env, "PERL5LIB="+config.InstallDir+"/lib/perl5")
+		cmd.Env = append(cmd.Env, "PATH="+os.Getenv("PATH")+":"+config.InstallDir+"/bin")
 
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
