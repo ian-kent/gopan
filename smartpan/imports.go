@@ -435,7 +435,10 @@ func do_import(session *http.Session, job *ImportJob) {
 			msg(" | Getting list of packages")
 			modnm := strings.TrimSuffix(fn, ".tar.gz")
 			pkg := indexes[config.Index][reponame].Authors[auth].Packages[fn]
-			pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir)
+			err := pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir)
+			if err != nil {
+				msg(" ! Error retrieving package list for " + pkg.Name + ": " + err.Error())
+			}
 
 			//pkg := indexes[config.Index][reponame].Authors[auth].Packages[fn]
 			msg(" | Adding packages to index")

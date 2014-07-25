@@ -31,6 +31,11 @@ You need Perl (preferably >=5.18.2) and the following modules for indexing
 - Parse::LocalDistribution
 - JSON::XS
 
+Use getpan to simplify installation:
+
+    getpan Parse::LocalDistribution JSON::XS
+    getpan exec smartpan
+
 All other GoPAN tools are entirely self-contained.
 
 ### Replacing Carton/cpanm

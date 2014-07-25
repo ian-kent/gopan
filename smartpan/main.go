@@ -34,6 +34,16 @@ var load_index func(string, string)
 func main() {
 	configure()
 
+	if config.TestDeps {
+		perldeps := gopan.TestPerlDeps()
+		perldeps.Dump()
+		if !perldeps.Ok {
+			log.Error("Required perl dependencies are missing")
+			os.Exit(1)
+			return
+		}
+	}
+
 	args := flag.Args()
 	if len(args) > 0 && args[0] == "import" {
 		if len(args) < 4 {

@@ -18,7 +18,7 @@ type Entry struct {
 }
 type PLD map[string]*Entry
 
-func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string) {
+func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string) error {
 	// not required? path should already exist
 	os.MkdirAll(dirpath, 0770)
 
@@ -33,7 +33,7 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 		log.Error("Extract run: %s", err.Error())
 		log.Trace(stdout1.String())
 		log.Error(stderr1.String())
-		return
+		return err
 	}
 
 	log.Trace(stdout1.String())
@@ -67,23 +67,23 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 	defer stdout.Close()
 	if err != nil {
 		log.Error("StdoutPipe: %s", err.Error())
-		return
+		return err
 	}
 
 	if err := cmd.Start(); err != nil {
 		log.Error("Start: %s", err.Error())
-		return
+		return err
 	}
 
 	var pld PLD
 	if err := json.NewDecoder(stdout).Decode(&pld); err != nil {
 		log.Error("JSON decoder error: %s", err.Error())
-		return
+		return err
 	}
 
 	if err := cmd.Wait(); err != nil {
 		log.Error("Wait: %s", err.Error())
-		return
+		return err
 	}
 
 	//log.Trace(stdout2.String())
@@ -102,4 +102,5 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 	}
 
 	log.Debug("%s provides %d packages", pkg, len(pkg.Provides))
+	return nil
 }

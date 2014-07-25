@@ -27,6 +27,8 @@ type Config struct {
 	BackPANStatus string
 	CPANStatus    string
 
+	TestDeps bool
+
 	// For some command line commands, e.g. `smartpan import`
 	RemoteHost string
 }
@@ -58,6 +60,9 @@ func configure() {
 	indexes := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&indexes), "s-index", "Secondary indexes to load (can be provided multiple times)")
 
+	testdeps := true
+	flag.BoolVar(&testdeps, "test-deps", true, "Test dependencies on startup")
+
 	flag.Parse()
 
 	config = &Config{
@@ -80,5 +85,6 @@ func configure() {
 		BackPANStatus:    "Unavailable",
 		CPANStatus:       "Unavailable",
 		RemoteHost:       remote,
+		TestDeps:         testdeps,
 	}
 }
