@@ -43,8 +43,8 @@ func main() {
 
 		fname := args[1]
 		log.Info("Importing module from %s", fname)
-		log.Info("Index    : %s", args[2])
-		log.Info("Author ID: %s", args[3])
+		log.Info("Author ID: %s", args[2])
+		log.Info("Index    : %s", args[3])
 
 		extraParams := map[string]string{
 			"importinto": args[3],
