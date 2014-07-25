@@ -68,7 +68,7 @@ You can import modules from the command line using SmartPAN.
 
 You can also import into remote SmartPAN hosts.
 
-    smartpan -remote http://smartpan:7050 /path/to/File-0.01.tar.gz AUTHORID IndexName
+    smartpan -remote http://smartpan:7050 import /path/to/File-0.01.tar.gz AUTHORID IndexName
     smartpan -remote http://smartpan:7050 import http://somewhere/File-0.01.tar.gz AUTHORID IndexName
 
 ## HTTP API
