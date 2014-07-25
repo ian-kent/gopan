@@ -36,6 +36,7 @@ func main() {
 		if err != nil {
 			// debug so it doesn't show up in stdout/stderr unless -loglevel is used
 			log.Debug("Error in exec: %s", err.Error())
+			os.Exit(10)
 		}
 
 		return
@@ -45,7 +46,8 @@ func main() {
 		err := source.Load()
 		if err != nil {
 			log.Error("Error loading sources: %s", err)
-			return // TODO exit code?
+			os.Exit(1)
+			return
 		}
 	}
 
@@ -56,6 +58,7 @@ func main() {
 		d, err := getpan.ParseCPANFile(config.CPANFile)
 		if err != nil {
 			log.Error("Error parsing cpanfile: %s", err)
+			os.Exit(2)
 			return
 		}
 		deps = &d.DependencyList
@@ -77,6 +80,7 @@ func main() {
 	err := deps.Resolve()
 	if err != nil {
 		log.Error("Error resolving dependencies: %s", err)
+		os.Exit(3)
 		return
 	}
 
@@ -92,6 +96,7 @@ func main() {
 
 	if err != nil {
 		log.Error("Error installing dependencies: %s", err)
+		os.Exit(4)
 		return
 	}
 
