@@ -56,7 +56,12 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 	case "SmartPAN":
 		log.Debug("=> Using SmartPAN source")
 
-		url := s.URL + "/where/" + d.Name + "/" + d.Modifier + d.Version
+		url := s.URL
+		if !strings.HasSuffix(s.URL, "/") {
+			url += "/"
+		}
+		url += "where/" + d.Name + "/" + d.Modifier + d.Version
+
 		log.Info("Query: %s", url)
 		res, err := http.Get(url)
 
