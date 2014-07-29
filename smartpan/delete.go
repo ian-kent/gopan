@@ -175,8 +175,18 @@ func delete_file(session *http.Session) {
 			delete(filemap, auth1+"/"+auth2+"/"+auth3+"/"+file)
 		}
 
+		// write remove to index
 		gopan.RemoveModule(config.CacheDir+"/"+config.Index, pkg.Author.Source, pkg.Author, pkg)
 	}
+
+	log.Debug("Removing file from gopancache: %s", fname)
+	// TODO move file deletion to shared gopan package
+	err := os.Remove(fname)
+	if err != nil {
+		log.Error("Error removing file: %s", err)
+	}
+
+	// TODO maybe clean up author tree (is this smartpans responsibility?)
 
 	nsrc, nauth, npkg, nprov := gopan.CountIndex(indexes)
 	// TODO should probably be in the index - needs to udpate when index changes
