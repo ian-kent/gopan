@@ -7,11 +7,12 @@ import (
 )
 
 func getpan_import(job *ImportJob, msg func(string)) (*getpan.CPANFile, []*getpan.Module) {
-	config := getpan.DefaultConfig()
+	cfg := getpan.DefaultConfig()
+	cfg.CacheDir = config.CacheDir
 
 	if len(job.Form.CPANMirror) > 0 {
 		msg("Adding CPAN mirror: " + job.Form.CPANMirror)
-		config.Sources = append(config.Sources, getpan.NewSource("CPAN", job.Form.CPANMirror+"/modules/02packages.details.txt.gz", job.Form.CPANMirror))
+		cfg.Sources = append(cfg.Sources, getpan.NewSource("CPAN", job.Form.CPANMirror+"/modules/02packages.details.txt.gz", job.Form.CPANMirror))
 	}
 
 	defer func(job *ImportJob) {
@@ -19,7 +20,7 @@ func getpan_import(job *ImportJob, msg func(string)) (*getpan.CPANFile, []*getpa
 		msg("GetPAN import complete")
 	}(job)
 
-	for _, source := range config.Sources {
+	for _, source := range cfg.Sources {
 		err := source.Load()
 		if err != nil {
 			m := fmt.Sprintf("Error loading sources: %s", err)
