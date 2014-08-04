@@ -62,6 +62,16 @@ Use `getpan exec` to configure your environment:
 | -noinstall        | -noinstall                       | Skips the installation phase
 | -test             | -test AnyCache                   | Enables tests for a specific module
 
+## Exit status
+
+| Exit status | Description
+| ----------- | -----------
+| 1           | Error loading CPAN/BackPAN/DarkPAN sources
+| 2           | Error parsing input cpanfile
+| 3           | Error resolving dependencies
+| 4           | Error installing dependencies
+| 10          | Error executing command (with `getpan exec`)
+
 ## cpanfile support
 
 GetPAN supports basic cpanfile syntax.
