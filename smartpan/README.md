@@ -30,7 +30,12 @@ by GetPAN for more effective dependency resolution.
 
 ## Getting started
 
-Run `smartpan` and open `http://your.host:7050` in a browser.
+Initialise SmartPAN and run with GetPAN:
+
+    smartpan init
+    getpan exec smartpan
+
+Open `http://your.host:7050` in a browser.
 
 - Import some modules
 - Pass it to GetPAN, Carton, cpanm as a mirror:

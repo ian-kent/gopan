@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/getpan/getpan"
 	"github.com/ian-kent/gopan/gopan"
 	gotcha "github.com/ian-kent/gotcha/app"
 	"github.com/ian-kent/gotcha/events"
@@ -34,6 +35,56 @@ var load_index func(string, string)
 func main() {
 	configure()
 
+	args := flag.Args()
+
+	if len(args) > 0 && args[0] == "init" {
+		log.Info("Initialising SmartPAN")
+
+		log.Info("=> Installing Perl dependencies")
+
+		// FIXME most of this is repeated from getpan/main.go
+		cfg := getpan.DefaultConfig()
+		cfg.CacheDir = config.CacheDir
+
+		for _, source := range cfg.Sources {
+			err := source.Load()
+			if err != nil {
+				log.Error("Error loading sources: %s", err)
+				os.Exit(1)
+				return
+			}
+		}
+
+		deps := &getpan.DependencyList{
+			Dependencies: make([]*getpan.Dependency, 0),
+		}
+
+		d1, _ := getpan.DependencyFromString("Parse::LocalDistribution", "")
+		d2, _ := getpan.DependencyFromString("JSON::XS", "")
+		deps.AddDependency(d1)
+		deps.AddDependency(d2)
+
+		err := deps.Resolve()
+		if err != nil {
+			log.Error("Error resolving dependencies: %s", err)
+			os.Exit(1)
+			return
+		}
+
+		_, err = deps.Install()
+		if err != nil {
+			log.Error("Error installing dependencies: %s", err)
+			os.Exit(2)
+			return
+		}
+
+		log.Info("   - Installed %d modules", deps.UniqueInstalled())
+
+		log.Info("SmartPAN initialisation complete")
+
+		return
+	}
+
 	if config.TestDeps {
 		perldeps := gopan.TestPerlDeps()
 		perldeps.Dump()
@@ -44,7 +95,6 @@ func main() {
 		}
 	}
 
-	args := flag.Args()
 	if len(args) > 0 && args[0] == "import" {
 		if len(args) < 4 {
 			log.Error("Invalid arguments, expecting: smartpan import FILE AUTHORID INDEX")
