@@ -2,19 +2,18 @@ package main
 
 import (
 	"flag"
-	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/getpan/getpan"
 )
 
 var config *getpan.Config
 
 func main() {
 	config = getpan.Configure()
-
-	log.Debug("GoPAN configuration:")
 	config.Dump()
 
 	mods := flag.Args()
