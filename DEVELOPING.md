@@ -6,6 +6,8 @@ Developing GoPAN
 - Clone [GoPAN](git@github.com:ian-kent/gopan.git) into `$GOHOME/src/github.com/ian-kent/gopan`
 - Run `make deps` to install GoPAN dependencies
 - Run `make` to build and install GoPAN (to $GOHOME/bin)
+- Run `make dist` to build native binaries
+  - Configure [gox](https://github.com/mitchellh/gox) first, e.g. running `gox -build-toolchain`
 
 ### Go libraries
 
@@ -58,4 +60,3 @@ Before submitting a pull request, please format your code:
 Copyright ©‎ 2014, Ian Kent (http://www.iankent.eu).
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
-
