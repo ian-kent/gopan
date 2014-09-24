@@ -3,7 +3,7 @@ GetPAN
 
 GetPAN is an alternative to Carton.
 
-It [has some differences to Carton](Carton.md), but essentially does 
+It [has some differences to Carton](Carton.md), but essentially does
 the same job of installing Perl dependencies from a cpanfile.
 
 ## Features
@@ -43,6 +43,26 @@ You can also install modules from the command line:
 Use `getpan exec` to configure your environment:
 
     getpan exec perl ./your_app.pl
+
+## Sources
+
+GetPAN supports CPAN, BackPAN and SmartPAN sources.
+
+You specify these with the `-cpan`, `-backpan` and `-smart` command line options.
+
+If you want to replace the default CPAN and BackPAN sources, also pass in `-nocpan` and `-nobackpan`.
+
+#### Source priority
+
+Each source is assigned a priority - this is 1000 by default. Lower numbers
+are higher priority.
+
+You can override this in the source URL. For example, this will attempt to
+resolve dependencies using SmartPAN before CPAN or BackPAN:
+
+    getpan -smart 1:https://your.smartpan:7050
+
+The priority can range from `1` to `int` on your platform.
 
 ## Command line options
 

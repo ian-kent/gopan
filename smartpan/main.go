@@ -5,12 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
-	"github.com/ian-kent/gopan/gopan"
-	gotcha "github.com/ian-kent/gotcha/app"
-	"github.com/ian-kent/gotcha/events"
-	"github.com/ian-kent/gotcha/http"
 	"html/template"
 	"io/ioutil"
 	nethttp "net/http"
@@ -19,6 +13,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/gopan/getpan/getpan"
+	"github.com/ian-kent/gopan/gopan"
+	gotcha "github.com/ian-kent/gotcha/app"
+	"github.com/ian-kent/gotcha/events"
+	"github.com/ian-kent/gotcha/http"
 )
 
 var CurrentRelease = "0.5"

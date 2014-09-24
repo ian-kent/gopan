@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/ian-kent/go-log/log"
 )
 
 // Matches cpan 02packages.details.txt format
@@ -19,11 +21,14 @@ var cpanRe = regexp.MustCompile("^\\s*([^\\s]+)\\s*([^\\s]+)\\s*(.*)$")
 // Matches gitpan backpan-index format
 var backpanRe = regexp.MustCompile("^authors/id/\\w/\\w{2}/\\w+/([^\\s]+)[-_]v?([\\d\\._\\w]+)(?:-\\w+)?.tar.gz$")
 
+var sourceRe = regexp.MustCompile("^(\\d+:)?.*")
+
 type Source struct {
 	Type       string
 	Index      string
 	URL        string
 	ModuleList map[string]*Module
+	Priority   int
 }
 
 // FIXME same structs in both smartpan and getpan
@@ -41,7 +46,21 @@ type WhereOutput struct {
 }
 
 func NewSource(Type string, Index string, URL string) *Source {
+	priority := 1000
+
+	matches := sourceRe.FindStringSubmatch(URL)
+
+	if len(matches[1]) > 0 {
+		i, err := strconv.Atoi(strings.TrimSuffix(matches[1], ":"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		priority = i
+		URL = strings.TrimPrefix(URL, matches[1])
+	}
+
 	return &Source{
+		Priority:   priority,
 		Type:       Type,
 		Index:      Index,
 		URL:        URL,
@@ -145,7 +164,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 }
 
 func (s *Source) String() string {
-	return fmt.Sprintf("%s: %s", s.Type, s.URL)
+	return fmt.Sprintf("[%d] %s: %s", s.Priority, s.Type, s.URL)
 }
 
 func (s *Source) Load() error {

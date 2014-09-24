@@ -2,12 +2,14 @@ package getpan
 
 import (
 	"flag"
+	"os"
+	"runtime"
+	"sort"
+	"strconv"
+
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
-	"os"
-	"runtime"
-	"strconv"
 )
 
 var config *Config
@@ -27,6 +29,12 @@ type Config struct {
 	CacheDir   string
 	InstallDir string
 }
+
+type sortSources []*Source
+
+func (s sortSources) Len() int           { return len(s) }
+func (s sortSources) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s sortSources) Less(i, j int) bool { return s[i].Priority < s[j].Priority }
 
 func (c *Config) Dump() {
 	log.Debug("GoPAN configuration:")
@@ -146,6 +154,8 @@ func Configure() *Config {
 		m := NewSource("SmartPAN", mirror, mirror)
 		conf.Sources = append(conf.Sources, m)
 	}
+
+	sort.Sort(sortSources(conf.Sources))
 
 	// parse notest
 	for _, n := range test {
