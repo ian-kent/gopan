@@ -13,7 +13,7 @@ deps:
 install: pandex mirropan getpan smartpan
 
 dist: smartpan
-	rm ./build -rf
+	rm -rf ./build
 	./gox_build.sh "0.5b"
 
 pandex:
