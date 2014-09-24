@@ -22,7 +22,7 @@ import (
 	"github.com/ian-kent/gotcha/http"
 )
 
-var CurrentRelease = "0.5"
+var CurrentRelease = "0.5b"
 
 type Releases []*Release
 type Release struct {

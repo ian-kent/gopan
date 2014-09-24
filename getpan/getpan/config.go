@@ -58,7 +58,7 @@ func (c *Config) Dump() {
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
-	log.Debug("=> InstallDir: %d", c.InstallDir)
+	log.Debug("=> InstallDir: %s", c.InstallDir)
 }
 
 func DefaultSources(cpan bool, backpan bool) []*Source {
