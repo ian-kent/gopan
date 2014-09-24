@@ -2,6 +2,9 @@ package main
 
 import (
 	"flag"
+
+	"github.com/ian-kent/go-log/layout"
+	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/gopan/gopan"
 )
 
@@ -57,6 +60,9 @@ func configure() {
 	remote := "http://localhost:7050"
 	flag.StringVar(&remote, "remote", "http://localhost:7050", "Remote host and port to connect to")
 
+	loglayout := "[%d] [%p] %m"
+	flag.StringVar(&loglayout, "loglayout", loglayout, "Log layout (for github.com/ian-kent/go-log pattern layout)")
+
 	indexes := make([]string, 0)
 	flag.Var((*gopan.AppendSliceValue)(&indexes), "s-index", "Secondary indexes to load (can be provided multiple times)")
 
@@ -87,4 +93,8 @@ func configure() {
 		RemoteHost:       remote,
 		TestDeps:         testdeps,
 	}
+
+	// log level and layout
+	log.Logger().Appender().SetLayout(layout.Pattern(loglayout))
+	log.Logger().SetLevel(log.Stol(loglevel))
 }
