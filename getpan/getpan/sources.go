@@ -23,6 +23,9 @@ var backpanRe = regexp.MustCompile("^authors/id/\\w/\\w{2}/\\w+/([^\\s]+)[-_]v?(
 
 var sourceRe = regexp.MustCompile("^(\\d+:)?.*")
 
+// Matches 'cpanm --info' string
+var metacpanRe = regexp.MustCompile("^(\\w+)/([^\\s]+)[-_]v?([\\d\\._\\w]+)(?:-\\w+)?(.tar.gz|.tgz)$")
+
 type Source struct {
 	Type       string
 	Index      string
@@ -65,6 +68,15 @@ func NewSource(Type string, Index string, URL string) *Source {
 		Index:      Index,
 		URL:        URL,
 		ModuleList: make(map[string]*Module),
+	}
+}
+
+func NewMetaSource(Type string, Index string, URL string, ModuleList map[string]*Module) *Source {
+	return &Source{
+		Type:       Type,
+		Index:      Index,
+		URL:        URL,
+		ModuleList: ModuleList,
 	}
 }
 
@@ -155,6 +167,66 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 			log.Trace("=> Version (%s) doesn't match dependency: %s", mod.Version, d)
 			return nil, nil
 		}
+	case "MetaCPAN":
+		log.Debug("=> Using MetaCPAN source")
+
+		var sout,serr bytes.Buffer
+		var modver string = fmt.Sprintf("%s~\"%s%s\"",d.Name,d.Modifier,d.Version)
+		log.Trace("About to exec: cpanm --info %s",modver)
+		os.Setenv("MODVER",modver)
+		cmd := exec.Command("bash","-c",`eval cpanm --info $MODVER`)
+		cmd.Stdout = &sout
+		cmd.Stderr = &serr
+
+		err := cmd.Run()
+		if err != nil {
+			log.Error("cpanm --info error: %s,\n%s\n",err,serr.String())
+			return nil,nil
+		}
+
+		if 0 == len(sout.String()) {
+			log.Warn("No author/module from cpanm")
+			return nil,nil
+		}
+
+		author_module := strings.TrimRight(sout.String(),"\n");
+		mematches := metacpanRe.FindStringSubmatch(author_module)
+		if nil == mematches {
+			log.Error("Match failed for: %s", author_module)
+			return nil,nil
+		}
+
+		log.Trace("Resolved: %s",author_module)
+		for _,mesource := range config.MetaSources {
+
+			meurl := fmt.Sprintf("authors/id/%s/%s/%s",
+				mematches[1][0:1],
+				mematches[1][0:2],
+				mematches[0] )
+
+			archive_url := fmt.Sprintf("%s/%s",mesource.URL,meurl)
+
+			log.Trace("Checking: "+archive_url)
+			resp, err := http.Head(archive_url)
+			if err != nil {
+				log.Trace(err)
+			} else {
+				log.Trace("HEAD status code: %d",resp.StatusCode)
+			}
+
+			if 200 == resp.StatusCode {
+				// No module/version check since 'cpanm --info' may resolve to
+				// archive and version that may not match source
+				return &Module{
+					Name:    mematches[2],
+					Version: mematches[3],
+					Source:  mesource,
+					Url:     meurl,
+				}, nil
+			}
+		}
+		log.Error("Could not get archive URL via 'cpanm --info %s'",modver)
+		return nil,nil
 	default:
 		log.Error("Unrecognised source type: %s", s.Type)
 		return nil, errors.New(fmt.Sprintf("Unrecognised source: %s", s))
@@ -179,6 +251,9 @@ func (s *Source) Load() error {
 		return s.loadBackPANSource()
 	case "SmartPAN":
 		log.Debug("=> Got SmartPAN source")
+		return nil
+	case "MetaCPAN":
+		log.Debug("=> Got MetaCPAN source")
 		return nil
 	default:
 		log.Error("Unrecognised source type: %s", s.Type)
