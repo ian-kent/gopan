@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
