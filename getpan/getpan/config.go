@@ -150,7 +150,8 @@ func Configure() *Config {
 	}
 
 	// parse smartpan mirrors
-	for _, mirror := range smart {
+	for _, url := range smart {
+		mirror := strings.TrimSuffix(url, "/")
 		m := NewSource("SmartPAN", mirror, mirror)
 		conf.Sources = append(conf.Sources, m)
 	}

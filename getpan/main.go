@@ -76,6 +76,15 @@ func main() {
 		}
 	}
 
+	for _, source := range config.Sources {
+		err := source.Load()
+		if err != nil {
+			log.Error("Error loading sources: %s", err)
+			os.Exit(1)
+			return
+		}
+	}
+
 	err := deps.Resolve()
 	if err != nil {
 		log.Error("Error resolving dependencies: %s", err)
