@@ -73,7 +73,8 @@ The priority can range from `1` to `int` on your platform.
 | -cpan             | -cpan http://www.cpan.org        | A CPAN mirror to use (can be specified multiple times)
 | -cpanfile         | -cpanfile app.cpanfile           | The cpanfile to install from
 | -cpus             | -cpus 4                          | Number of CPUs to use
-| -installdir       | -installdir ./modules            | Installation directory for CPAN modules
+| -cachedir         | -cachedir ./cache                | Cache directory for CPAN modules (default is './.gopancache')
+| -installdir       | -installdir ./modules            | Installation directory for CPAN modules (default is './local')
 | -loglayout        | -loglayout="[%d] %m"             | A github.com/ian-kent/go-log compatible pattern layout
 | -loglevel         | -loglevel=TRACE                  | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
 | -tests            | -tests                           | Enables all installation tests

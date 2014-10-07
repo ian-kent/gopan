@@ -58,6 +58,7 @@ func (c *Config) Dump() {
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
+	log.Debug("=> CacheDir: %s", c.CacheDir)
 	log.Debug("=> InstallDir: %s", c.InstallDir)
 }
 
@@ -83,7 +84,7 @@ func DefaultConfig() *Config {
 		NoInstall:  false,
 		LogLevel:   "INFO",
 		CPUs:       runtime.NumCPU(),
-		CacheDir:   ".gopancache",
+		CacheDir:   "./.gopancache",
 		InstallDir: "./local",
 	}
 	return config
@@ -127,6 +128,9 @@ func Configure() *Config {
 
 	loglayout := "[%d] [%p] %m"
 	flag.StringVar(&loglayout, "loglayout", loglayout, "Log layout (for github.com/ian-kent/go-log pattern layout)")
+
+	cachedir := "./.gopancache"
+	flag.StringVar(&cachedir, "cachedir", cachedir, "Cache directory for CPAN modules")
 
 	installdir := "./local"
 	flag.StringVar(&installdir, "installdir", installdir, "Install directory for CPAN modules")
@@ -174,6 +178,9 @@ func Configure() *Config {
 
 	// install dir
 	conf.InstallDir = installdir
+
+	// cache dir
+	conf.CacheDir = cachedir
 
 	// log level and layout
 	log.Logger().Appender().SetLayout(layout.Pattern(loglayout))
