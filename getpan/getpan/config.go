@@ -22,6 +22,7 @@ type TestConfig struct {
 type Config struct {
 	Sources    []*Source
 	Test       *TestConfig
+	NoDepdump   bool
 	NoInstall  bool
 	CPANFile   string
 	LogLevel   string
@@ -55,6 +56,7 @@ func (c *Config) Dump() {
 	}
 
 	log.Debug("=> NoInstall: %t", c.NoInstall)
+	log.Debug("=> NoDepdump: %t", c.NoDepdump)
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
@@ -80,6 +82,7 @@ func DefaultConfig() *Config {
 			Global:  false,
 			Modules: make(map[string]bool),
 		},
+		NoDepdump:  false,
 		NoInstall:  false,
 		LogLevel:   "INFO",
 		CPUs:       runtime.NumCPU(),
@@ -118,6 +121,9 @@ func Configure() *Config {
 
 	numcpus := runtime.NumCPU()
 	flag.IntVar(&numcpus, "cpus", numcpus, "The number of CPUs to use, defaults to "+strconv.Itoa(numcpus)+" for your environment")
+
+	nodepdump := false
+	flag.BoolVar(&nodepdump, "nodepdump", nodepdump, "Disables dumping resolved dependencies listing")
 
 	noinstall := false
 	flag.BoolVar(&noinstall, "noinstall", noinstall, "Disables installation phase")
@@ -168,6 +174,9 @@ func Configure() *Config {
 
 	// numcpus
 	conf.CPUs = numcpus
+
+	// nodepdeump
+	conf.NoDepdump = nodepdump
 
 	// noinstall
 	conf.NoInstall = noinstall
