@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/ian-kent/go-log/log"
+	"bytes"
 )
 
 // Matches cpan 02packages.details.txt format
