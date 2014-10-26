@@ -90,8 +90,10 @@ func main() {
 		return
 	}
 
-	log.Info("Resolved dependency tree:")
-	deps.PrintDeps(0)
+	if false == config.NoDepdump {
+		log.Info("Resolved dependency tree:")
+		deps.PrintDeps(0)
+	}
 
 	if config.NoInstall {
 		log.Info("Skipping installation phase")
