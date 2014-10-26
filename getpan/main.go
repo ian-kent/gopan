@@ -20,7 +20,7 @@ func main() {
 
 	if len(mods) == 0 {
 		if _, err := os.Stat(config.CPANFile); os.IsNotExist(err) {
-			log.Error("file not found: %s", config.CPANFile)
+			log.Error("cpanfile not found: %s", config.CPANFile)
 			os.Exit(1)
 		}
 	}
