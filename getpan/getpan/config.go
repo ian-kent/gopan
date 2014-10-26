@@ -62,6 +62,7 @@ func (c *Config) Dump() {
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
+	log.Debug("=> CacheDir: %s", c.CacheDir)
 	log.Debug("=> InstallDir: %s", c.InstallDir)
 }
 
@@ -87,7 +88,7 @@ func DefaultConfig() *Config {
 		NoInstall:  false,
 		LogLevel:   "INFO",
 		CPUs:       runtime.NumCPU(),
-		CacheDir:   ".gopancache",
+		CacheDir:   "./.gopancache",
 		InstallDir: "./local",
 		MetaCPAN:   false,
 	}
@@ -136,6 +137,9 @@ func Configure() *Config {
 	loglayout := "[%d] [%p] %m"
 	flag.StringVar(&loglayout, "loglayout", loglayout, "Log layout (for github.com/ian-kent/go-log pattern layout)")
 
+	cachedir := "./.gopancache"
+	flag.StringVar(&cachedir, "cachedir", cachedir, "Cache directory for CPAN modules")
+
 	installdir := "./local"
 	flag.StringVar(&installdir, "installdir", installdir, "Install directory for CPAN modules")
 
@@ -166,6 +170,17 @@ func Configure() *Config {
 		conf.Sources = append(conf.Sources, m)
 	}
 
+	// resolve via metacpan
+	conf.MetaCPAN = metacpan
+	if metacpan {
+		m := NewSource("MetaCPAN", "", "")
+		conf.Sources = append(conf.Sources, m)
+		c := NewMetaSource("cpan", "", "http://www.cpan.org", m.ModuleList)
+		conf.MetaSources = append(conf.MetaSources, c)
+		b := NewMetaSource("backpan", "", "http://backpan.perl.org", m.ModuleList)
+		conf.MetaSources = append(conf.MetaSources, b)
+	}
+
 	sort.Sort(sortSources(conf.Sources))
 
 	// parse notest
@@ -186,16 +201,8 @@ func Configure() *Config {
 	// install dir
 	conf.InstallDir = installdir
 
-	// resolve via metacpan
-	conf.MetaCPAN = metacpan
-	if metacpan {
-		m := NewSource("MetaCPAN", "", "")
-		conf.Sources = append(conf.Sources, m)
-		c := NewMetaSource("cpan", "", "http://www.cpan.org", m.ModuleList)
-		conf.MetaSources = append(conf.MetaSources, c)
-		b := NewMetaSource("backpan", "", "http://backpan.perl.org", m.ModuleList)
-		conf.MetaSources = append(conf.MetaSources, b)
-	}
+	// cache dir
+	conf.CacheDir = cachedir
 
 	// log level and layout
 	log.Logger().Appender().SetLayout(layout.Pattern(loglayout))
