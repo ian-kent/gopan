@@ -7,7 +7,12 @@ import (
 	"github.com/ian-kent/gopan/gopan"
 	"github.com/ian-kent/gotcha/http"
 	"strings"
+	"regexp"
+	"fmt"
 )
+
+// parse tail of a 02packages.details.txt line
+var packageUrlRe = regexp.MustCompile(`authors/id/\w/\w{2}/\w+/([^\s]+)[-_]v?([\d\._\w]+)(?:-\w+)?(.tar.gz|.tgz)$`)
 
 // FIXME same structs in both smartpan and getpan
 type VersionOutput struct {
@@ -69,19 +74,49 @@ func where(session *http.Session) {
 	versions := make([]*VersionOutput, 0)
 	lv := float64(0)
 	if len(version) > 0 {
-		dep, _ := getpan.DependencyFromString(module, version)
-		for v, md := range mod.Versions {
-			log.Info("Matching [%s] against md.Version [%s], md.Package.Version [%f]", dep.Version, md.Version, md.Package.Version())
-			if dep.MatchesVersion(md.Version) {
-				vout := &VersionOutput{
-					Index:   md.Package.Author.Source.Name,
-					URL:     md.Package.VirtualURL(),
-					Path:    md.Package.AuthorURL(),
-					Version: gopan.VersionFromString(md.Version),
+		if ">0" == version {
+			// Take account of packages that have a version of 'undef'
+			for _, pkg := range mod.Packages {
+				packageURL := pkg.Package.VirtualURL()
+				urlmatches := packageUrlRe.FindStringSubmatch(packageURL)
+				if nil == urlmatches {
+					log.Info("Version requested [%s] not found", version)
+					session.Response.Status = 404
+					session.Response.Send()
+					return
 				}
-				versions = append(versions, vout)
-				if v > lv {
-					lv = v
+				ver := gopan.VersionFromString(urlmatches[2])
+				log.Info("Found version: %f", ver)
+				versions = append(versions, &VersionOutput{
+					Index:   pkg.Package.Author.Source.Name,
+					URL:     packageURL,
+					Path:    pkg.Package.AuthorURL(),
+					Version: ver,
+				})
+				if ver > lv {
+					lv = ver
+				}
+			}
+		} else {
+			dep, _ := getpan.DependencyFromString(module, version)
+			for _, md := range mod.Versions {
+				var sver string = md.Version
+				if `undef` == md.Version {
+					sver = fmt.Sprintf("%.2f",md.Package.Version())
+				}
+				log.Info("Matching [%s] against derived version [%s] (md.Version [%s], md.Package.Version [%f])", dep.Version, sver, md.Version, md.Package.Version())
+				if dep.MatchesVersion(sver) {
+					vout := &VersionOutput{
+						Index:   md.Package.Author.Source.Name,
+						URL:     md.Package.VirtualURL(),
+						Path:    md.Package.AuthorURL(),
+						Version: gopan.VersionFromString(sver),
+					}
+					versions = append(versions, vout)
+					ver := gopan.VersionFromString(sver)
+					if ver > lv {
+						lv = ver
+					}
 				}
 			}
 		}
