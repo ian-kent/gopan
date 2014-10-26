@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
@@ -20,17 +21,16 @@ type TestConfig struct {
 }
 
 type Config struct {
-	Sources    []*Source
-	Test       *TestConfig
-	NoInstall  bool
-	CPANFile   string
-	LogLevel   string
-	CPUs       int
-	CacheDir   string
-	InstallDir string
+	Sources     []*Source
+	Test        *TestConfig
+	NoInstall   bool
+	CPANFile    string
+	LogLevel    string
+	CPUs        int
+	CacheDir    string
+	InstallDir  string
 	MetaCPAN    bool
 	MetaSources []*Source
-
 }
 
 type sortSources []*Source
@@ -146,19 +146,22 @@ func Configure() *Config {
 	}
 
 	// parse cpan mirrors
-	for _, mirror := range cpan {
+	for _, url := range cpan {
+		mirror := strings.TrimSuffix(url, "/")
 		m := NewSource("CPAN", mirror+"/modules/02packages.details.txt.gz", mirror)
 		conf.Sources = append(conf.Sources, m)
 	}
 
 	// parse backpan mirrors
-	for _, mirror := range backpan {
+	for _, url := range backpan {
+		mirror := strings.TrimSuffix(url, "/")
 		m := NewSource("BackPAN", mirror+"/backpan-index", mirror) // FIXME
 		conf.Sources = append(conf.Sources, m)
 	}
 
 	// parse smartpan mirrors
-	for _, mirror := range smart {
+	for _, url := range smart {
+		mirror := strings.TrimSuffix(url, "/")
 		m := NewSource("SmartPAN", mirror, mirror)
 		conf.Sources = append(conf.Sources, m)
 	}

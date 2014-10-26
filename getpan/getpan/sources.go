@@ -1,11 +1,11 @@
 package getpan
 
 import (
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,7 +13,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"bytes"
+
+	"github.com/ian-kent/go-log/log"
 )
 
 // Matches cpan 02packages.details.txt format
@@ -171,48 +172,48 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 	case "MetaCPAN":
 		log.Debug("=> Using MetaCPAN source")
 
-		var sout,serr bytes.Buffer
-		var modver string = fmt.Sprintf("%s~\"%s%s\"",d.Name,d.Modifier,d.Version)
-		log.Trace("About to exec: cpanm --info %s",modver)
-		os.Setenv("MODVER",modver)
-		cmd := exec.Command("bash","-c",`eval cpanm --info $MODVER`)
+		var sout, serr bytes.Buffer
+		var modver string = fmt.Sprintf("%s~\"%s%s\"", d.Name, d.Modifier, d.Version)
+		log.Trace("About to exec: cpanm --info %s", modver)
+		os.Setenv("MODVER", modver)
+		cmd := exec.Command("bash", "-c", `eval cpanm --info $MODVER`)
 		cmd.Stdout = &sout
 		cmd.Stderr = &serr
 
 		err := cmd.Run()
 		if err != nil {
-			log.Error("cpanm --info error: %s,\n%s\n",err,serr.String())
-			return nil,nil
+			log.Error("cpanm --info error: %s,\n%s\n", err, serr.String())
+			return nil, nil
 		}
 
 		if 0 == len(sout.String()) {
 			log.Warn("No author/module from cpanm")
-			return nil,nil
+			return nil, nil
 		}
 
-		author_module := strings.TrimRight(sout.String(),"\n");
+		author_module := strings.TrimRight(sout.String(), "\n")
 		mematches := metacpanRe.FindStringSubmatch(author_module)
 		if nil == mematches {
 			log.Error("Match failed for: %s", author_module)
-			return nil,nil
+			return nil, nil
 		}
 
-		log.Trace("Resolved: %s",author_module)
-		for _,mesource := range config.MetaSources {
+		log.Trace("Resolved: %s", author_module)
+		for _, mesource := range config.MetaSources {
 
 			meurl := fmt.Sprintf("authors/id/%s/%s/%s",
 				mematches[1][0:1],
 				mematches[1][0:2],
-				mematches[0] )
+				mematches[0])
 
-			archive_url := fmt.Sprintf("%s/%s",mesource.URL,meurl)
+			archive_url := fmt.Sprintf("%s/%s", mesource.URL, meurl)
 
-			log.Trace("Checking: "+archive_url)
+			log.Trace("Checking: " + archive_url)
 			resp, err := http.Head(archive_url)
 			if err != nil {
 				log.Trace(err)
 			} else {
-				log.Trace("HEAD status code: %d",resp.StatusCode)
+				log.Trace("HEAD status code: %d", resp.StatusCode)
 			}
 
 			if 200 == resp.StatusCode {
@@ -226,8 +227,8 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 				}, nil
 			}
 		}
-		log.Error("Could not get archive URL via 'cpanm --info %s'",modver)
-		return nil,nil
+		log.Error("Could not get archive URL via 'cpanm --info %s'", modver)
+		return nil, nil
 	default:
 		log.Error("Unrecognised source type: %s", s.Type)
 		return nil, errors.New(fmt.Sprintf("Unrecognised source: %s", s))
@@ -267,7 +268,7 @@ func (s *Source) loadCPANSource() error {
 
 	res, err := http.Get(s.Index)
 	if err != nil {
-		log.Warn(err)
+		log.Warn("Error loading index: %s", err)
 		return nil
 	}
 
