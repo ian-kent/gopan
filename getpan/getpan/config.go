@@ -28,6 +28,9 @@ type Config struct {
 	CPUs       int
 	CacheDir   string
 	InstallDir string
+	MetaCPAN    bool
+	MetaSources []*Source
+
 }
 
 type sortSources []*Source
@@ -55,6 +58,7 @@ func (c *Config) Dump() {
 	}
 
 	log.Debug("=> NoInstall: %t", c.NoInstall)
+	log.Debug("=> MetaCPAN: %t", c.MetaCPAN)
 	log.Debug("=> CPANFile: %s", c.CPANFile)
 	log.Debug("=> LogLevel: %s", c.LogLevel)
 	log.Debug("=> Parallelism: %d", c.CPUs)
@@ -85,6 +89,7 @@ func DefaultConfig() *Config {
 		CPUs:       runtime.NumCPU(),
 		CacheDir:   ".gopancache",
 		InstallDir: "./local",
+		MetaCPAN:   false,
 	}
 	return config
 }
@@ -121,6 +126,9 @@ func Configure() *Config {
 
 	noinstall := false
 	flag.BoolVar(&noinstall, "noinstall", noinstall, "Disables installation phase")
+
+	metacpan := false
+	flag.BoolVar(&metacpan, "metacpan", metacpan, "Enable resolving source via MetaCPAN")
 
 	loglevel := "INFO"
 	flag.StringVar(&loglevel, "loglevel", loglevel, "Log output level (ERROR, INFO, WARN, DEBUG, TRACE)")
@@ -174,6 +182,17 @@ func Configure() *Config {
 
 	// install dir
 	conf.InstallDir = installdir
+
+	// resolve via metacpan
+	conf.MetaCPAN = metacpan
+	if metacpan {
+		m := NewSource("MetaCPAN", "", "")
+		conf.Sources = append(conf.Sources, m)
+		c := NewMetaSource("cpan", "", "http://www.cpan.org", m.ModuleList)
+		conf.MetaSources = append(conf.MetaSources, c)
+		b := NewMetaSource("backpan", "", "http://backpan.perl.org", m.ModuleList)
+		conf.MetaSources = append(conf.MetaSources, b)
+	}
 
 	// log level and layout
 	log.Logger().Appender().SetLayout(layout.Pattern(loglayout))
