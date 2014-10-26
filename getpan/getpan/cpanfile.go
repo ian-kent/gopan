@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var re = regexp.MustCompile("^\\s*requires\\s+['\"]([^'\"]+)['\"](,\\s+['\"]([^'\"]+)['\"])?;\\s*(#.*)?")
+var re = regexp.MustCompile(`^\s*(requires|configure_requires|build_requires|test_requires|author_requires)\s+['\"]([^'\"]+)['\"](\s*,\s*['\"]([^'\"]+)['\"])?\s*;\s*(#\s*.*)?`)
 
 type CPANFile struct {
 	DependencyList
@@ -24,9 +24,9 @@ func ParseCPANLine(line string) (*Dependency, error) {
 		return nil, nil
 	}
 
-	module := matches[1]
-	version := matches[3]
-	comment := matches[4]
+	module := matches[2]
+	version := strings.Replace(matches[4], " ", "", -1)
+	comment := matches[5]
 
 	dependency, err := DependencyFromString(module, version)
 

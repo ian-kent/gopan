@@ -18,6 +18,13 @@ func main() {
 
 	mods := flag.Args()
 
+	if len(mods) == 0 {
+		if _, err := os.Stat(config.CPANFile); os.IsNotExist(err) {
+			log.Error("cpanfile not found: %s", config.CPANFile)
+			os.Exit(1)
+		}
+	}
+
 	if len(mods) > 0 && mods[0] == "exec" {
 		log.Debug("getpan exec => " + strings.Join(mods[1:], " "))
 
