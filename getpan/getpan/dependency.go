@@ -386,32 +386,31 @@ func (v *Dependency) Matches(module *Module) bool {
 }
 
 func DependencyFromString(name string, dependency string) (*Dependency, error) {
+
+	version := "0.00"
+	modifier := ">"
+
 	matches := versionRe.FindStringSubmatch(dependency)
 
 	if len(matches) == 3 {
-		if len(matches[1]) == 0 {
-			matches[1] = ">="
+		if len(matches[1]) > 0 {
+			modifier = matches[1]
 		}
-		if len(matches[2]) == 0 {
-			matches[2] = "0.00"
+		if len(matches[2]) > 0 {
+			version = matches[2]
+			if len(matches[1]) == 0 {
+				modifier = ">="
+			}
 		}
-
-		dep := &Dependency{
-			Name:       name,
-			Version:    matches[2],
-			Modifier:   matches[1],
-			Additional: make([]*Dependency, 0),
-		}
-		return dep, nil
-	} else {
-		dep := &Dependency{
-			Name:       name,
-			Version:    "0.00",
-			Modifier:   ">=",
-			Additional: make([]*Dependency, 0),
-		}
-		return dep, nil
 	}
+
+	dep := &Dependency{
+		Name:       name,
+		Version:    version,
+		Modifier:   modifier,
+		Additional: make([]*Dependency, 0),
+	}
+	return dep, nil
 }
 
 func MkIndent(d int) string {
@@ -442,6 +441,7 @@ func (m *Module) PrintDeps(d int) {
 func (m *Module) Download() error {
 	m.Dir = config.CacheDir + "/" + path.Dir(m.Url)
 	p := strings.TrimSuffix(path.Base(m.Url), ".tar.gz") // FIXME
+	p = strings.TrimSuffix(p, ".tgz")
 	m.Extracted = m.Dir + "/" + p
 	m.Cached = config.CacheDir + "/" + m.Url
 
