@@ -87,6 +87,7 @@ The priority can range from `1` to `int` on your platform.
 | -nocpan           | -nocpan                          | Disables the default CPAN source
 | -nobackpan        | -nobackpan                       | Disables the default BackPAN source
 | -noinstall        | -noinstall                       | Skips the installation phase
+| -nodepdump        | -nodepdump                       | Skips the resolved dependency dump
 | -test             | -test AnyCache                   | Enables tests for a specific module
 
 ## Exit status
