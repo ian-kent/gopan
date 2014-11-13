@@ -1,4 +1,4 @@
-GoPAN
+GoPAN  [ ![Download](https://api.bintray.com/packages/ian-kent/generic/gopan/images/download.svg) ](https://bintray.com/ian-kent/generic/gopan/_latestVersion)
 =====
 
 GoPAN provides a full end-to-end toolchain to mirror, index, host and install from
