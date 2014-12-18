@@ -43,6 +43,9 @@ It takes approximately 48 hours on a 6-core i7 with 32GB memory and SSD.
 | -extdir     | -extdir /tmp/ramdisk                   | A temporary directory to extract archives to
 | -loglevel   | -loglevel=TRACE                        | Set log output level (ERROR, INFO, WARN, DEBUG, TRACE)
 
+## Environment variable options
+
+* `GOPAN_ALLOW_DEV_VERSIONS` set non-empty so that development versions (e.g. 1.01_02) are imported
 
 ## Licence
 
