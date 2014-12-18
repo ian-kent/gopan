@@ -18,6 +18,8 @@ type Entry struct {
 }
 type PLD map[string]*Entry
 
+var pldArgs string
+
 func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string) error {
 	// not required? path should already exist
 	os.MkdirAll(dirpath, 0770)
@@ -58,8 +60,16 @@ func Provides(pkg *gopan.Package, tgzpath string, extpath string, dirpath string
 	//var stdout2 bytes.Buffer
 	var stderr2 bytes.Buffer
 
+	if len(pldArgs) == 0 {
+		if len(os.Getenv("GOPAN_ALLOW_DEV_VERSIONS")) > 0 {
+			pldArgs = "({ALLOW_DEV_VERSION=>1})"
+		} else {
+			pldArgs = "()"
+		}
+	}
+	log.Trace("pldArgs: %s", pldArgs)
 	//cmd := exec.Command("perl", "-MModule::Metadata", "-MJSON::XS", "-e", "print encode_json(Module::Metadata->provides(version => 2, prefix => \"\", dir => $ARGV[0]))", extpath)
-	cmd := exec.Command("perl", "-MParse::LocalDistribution", "-MJSON::XS", "-e", "print encode_json(Parse::LocalDistribution->new->parse($ARGV[0]))", extpath)
+	cmd := exec.Command("perl", "-MParse::LocalDistribution", "-MJSON::XS", "-e", "print encode_json(Parse::LocalDistribution->new"+pldArgs+"->parse($ARGV[0]))", extpath)
 	//cmd.Stdout = &stdout2
 	cmd.Stderr = &stderr2
 
