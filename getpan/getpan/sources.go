@@ -212,10 +212,10 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 			resp, err := http.Head(archive_url)
 			if err != nil {
 				log.Trace(err)
-			} else {
-				log.Trace("HEAD status code: %d", resp.StatusCode)
+				continue
 			}
 
+			log.Trace("HEAD status code: %d", resp.StatusCode)
 			if 200 == resp.StatusCode {
 				// No module/version check since 'cpanm --info' may resolve to
 				// archive and version that may not match source
@@ -226,6 +226,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 					Url:     meurl,
 				}, nil
 			}
+
 		}
 		log.Error("Could not get archive URL via 'cpanm --info %s'", modver)
 		return nil, nil
