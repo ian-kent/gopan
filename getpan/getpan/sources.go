@@ -173,16 +173,16 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		log.Debug("=> Using MetaCPAN source")
 
 		var sout, serr bytes.Buffer
-		var modver string = fmt.Sprintf("%s~\"%s%s\"", d.Name, d.Modifier, d.Version)
-		log.Trace("About to exec: cpanm --info %s", modver)
-		os.Setenv("MODVER", modver)
-		cmd := exec.Command("bash", "-c", `eval cpanm --info $MODVER`)
+		var cpanm_args string = fmt.Sprintf("-L %s --info %s~\"%s%s\"", config.InstallDir, d.Name, d.Modifier, d.Version)
+		log.Trace("About to exec: cpanm %s", cpanm_args)
+		os.Setenv("CPANM_INFO_ARGS", cpanm_args)
+		cmd := exec.Command("bash", "-c", `eval cpanm $CPANM_INFO_ARGS`)
 		cmd.Stdout = &sout
 		cmd.Stderr = &serr
 
 		err := cmd.Run()
 		if err != nil {
-			log.Error("cpanm --info error: %s,\n%s\n", err, serr.String())
+			log.Error("cpanm %s: %s,\n%s\n", cpanm_args, err, serr.String())
 			return nil, nil
 		}
 
@@ -228,7 +228,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 			}
 
 		}
-		log.Error("Could not get archive URL via 'cpanm --info %s'", modver)
+		log.Error("Could not get archive URL via 'cpanm %s'", cpanm_args)
 		return nil, nil
 	default:
 		log.Error("Unrecognised source type: %s", s.Type)
