@@ -8,6 +8,7 @@ deps:
 	go get github.com/ian-kent/go-log/log
 	go get github.com/mitchellh/gox
 	go get gopkg.in/yaml.v1
+	go get golang.org/x/net/html
 
 install: pandex mirropan getpan smartpan
 
