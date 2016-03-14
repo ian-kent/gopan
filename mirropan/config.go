@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/ian-kent/gopan/gopan"
+	"github.com/companieshouse/gopan/gopan"
 )
 
 type Config struct {

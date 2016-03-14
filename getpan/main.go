@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
+	"github.com/companieshouse/gopan/getpan/getpan"
 )
 
 var config *getpan.Config

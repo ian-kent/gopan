@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
+	"github.com/companieshouse/gopan/gopan"
 	"gopkg.in/yaml.v1"
 	"io"
 	"io/ioutil"

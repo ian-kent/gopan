@@ -4,10 +4,9 @@ fmt:
 	go fmt ./...
 
 deps:
-	go get github.com/ian-kent/gotcha/...
+	go get github.com/companieshouse/gotcha/...
 	go get github.com/ian-kent/go-log/log
 	go get github.com/mitchellh/gox
-	go get code.google.com/p/go.net/html
 	go get gopkg.in/yaml.v1
 
 install: pandex mirropan getpan smartpan

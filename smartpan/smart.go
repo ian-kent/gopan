@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
-	"github.com/ian-kent/gopan/gopan"
-	"github.com/ian-kent/gotcha/http"
-	"strings"
-	"regexp"
 	"fmt"
+	"github.com/ian-kent/go-log/log"
+	"github.com/companieshouse/gopan/getpan/getpan"
+	"github.com/companieshouse/gopan/gopan"
+	"github.com/companieshouse/gotcha/http"
+	"regexp"
+	"strings"
 )
 
 // parse tail of a 02packages.details.txt line
@@ -102,7 +102,7 @@ func where(session *http.Session) {
 			for _, md := range mod.Versions {
 				var sver string = md.Version
 				if `undef` == md.Version {
-					sver = fmt.Sprintf("%.2f",md.Package.Version())
+					sver = fmt.Sprintf("%.2f", md.Package.Version())
 				}
 				log.Info("Matching [%s] against derived version [%s] (md.Version [%s], md.Package.Version [%f])", dep.Version, sver, md.Version, md.Package.Version())
 				if dep.MatchesVersion(sver) {

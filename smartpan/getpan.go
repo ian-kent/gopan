@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ian-kent/gopan/getpan/getpan"
+	"github.com/companieshouse/gopan/getpan/getpan"
 	"strings"
 )
 
