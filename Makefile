@@ -4,17 +4,17 @@ fmt:
 	go fmt ./...
 
 deps:
-	go get github.com/ian-kent/gotcha/...
+	go get github.com/companieshouse/gotcha/...
 	go get github.com/ian-kent/go-log/log
 	go get github.com/mitchellh/gox
-	go get code.google.com/p/go.net/html
 	go get gopkg.in/yaml.v1
+	go get golang.org/x/net/html
 
 install: pandex mirropan getpan smartpan
 
 dist: smartpan
 	rm -rf ./build
-	./gox_build.sh "0.6"
+	./gox_build.sh "0.8"
 
 pandex:
 	go install ./pandex

@@ -3,7 +3,7 @@ Developing GoPAN
 
 - [Setup your Go environment](http://golang.org/doc/install)
 - [Finish setting up your Go environment](http://golang.org/doc/code.html)
-- Clone [GoPAN](git@github.com:ian-kent/gopan.git) into `$GOHOME/src/github.com/ian-kent/gopan`
+- Clone [GoPAN](git@github.com:companieshouse/gopan.git) into `$GOHOME/src/github.com/companieshouse/gopan`
 - Run `make deps` to install GoPAN dependencies
 - Run `make` to build and install GoPAN (to $GOHOME/bin)
 - Run `make dist` to build native binaries
@@ -44,10 +44,6 @@ by GetPAN (and SmartPAN for imports).
 This prevents GetPAN from updating Perl core modules (or attempting to install Perl itself!)
 
 See [getpan/Carton.md](getpan/Carton.md) for more information.
-
-### Things to do
-
-See the [GoPAN issues page](https://github.com/ian-kent/gopan/issues) on GitHub
 
 ### Pull requests
 

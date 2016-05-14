@@ -15,14 +15,14 @@ import (
 	"time"
 
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
-	"github.com/ian-kent/gopan/gopan"
-	gotcha "github.com/ian-kent/gotcha/app"
-	"github.com/ian-kent/gotcha/events"
-	"github.com/ian-kent/gotcha/http"
+	"github.com/companieshouse/gopan/getpan/getpan"
+	"github.com/companieshouse/gopan/gopan"
+	gotcha "github.com/companieshouse/gotcha/app"
+	"github.com/companieshouse/gotcha/events"
+	"github.com/companieshouse/gotcha/http"
 )
 
-var CurrentRelease = "0.6"
+var CurrentRelease = "0.8"
 
 type Releases []*Release
 type Release struct {
@@ -336,7 +336,7 @@ func main() {
 
 	// Get latest SmartPAN version
 	go func() {
-		res, err := nethttp.Get("https://api.github.com/repos/ian-kent/gopan/releases")
+		res, err := nethttp.Get("https://api.github.com/repos/companieshouse/gopan/releases")
 		if err != nil {
 			log.Error("Error getting latest version: %s", err.Error())
 			return

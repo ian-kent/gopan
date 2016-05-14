@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
+	"github.com/companieshouse/gopan/gopan"
 	"os"
 	"os/exec"
 )

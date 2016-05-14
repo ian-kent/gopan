@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
-	"github.com/ian-kent/gopan/pandex/pandex"
+	"github.com/companieshouse/gopan/gopan"
+	"github.com/companieshouse/gopan/pandex/pandex"
 	"os"
 	"strings"
 	"sync"

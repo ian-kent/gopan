@@ -1,9 +1,9 @@
 package main
 
 import (
-	"code.google.com/p/go.net/html"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
+	"github.com/companieshouse/gopan/gopan"
+	"golang.org/x/net/html"
 	"net/http"
 	"strings"
 )

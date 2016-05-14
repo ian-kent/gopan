@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gotcha/http"
+	"github.com/companieshouse/gotcha/http"
 	"strconv"
 )
 
