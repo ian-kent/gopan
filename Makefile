@@ -14,7 +14,7 @@ install: pandex mirropan getpan smartpan
 
 dist: smartpan
 	rm -rf ./build
-	./gox_build.sh "0.6"
+	./gox_build.sh "0.8"
 
 pandex:
 	go install ./pandex

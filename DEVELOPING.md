@@ -45,10 +45,6 @@ This prevents GetPAN from updating Perl core modules (or attempting to install P
 
 See [getpan/Carton.md](getpan/Carton.md) for more information.
 
-### Things to do
-
-See the [GoPAN issues page](https://github.com/companieshouse/gopan/issues) on GitHub
-
 ### Pull requests
 
 Before submitting a pull request, please format your code:
