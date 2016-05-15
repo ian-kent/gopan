@@ -169,7 +169,9 @@ func (d *DependencyList) Install() (int, error) {
 				errorLock.Unlock()
 			}
 
+			install_lock.Lock()
 			install_mutex[dep.Module.Cached].Unlock()
+			install_lock.Unlock()
 
 			n++
 		}(dep)
