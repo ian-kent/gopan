@@ -244,7 +244,7 @@ func (d *Dependency) Resolve(p *Module) error {
 	}
 	if d.Module == nil {
 		log.Error("Error resolving dependency: %s", d)
-		return errors.New(fmt.Sprintf("Dependency not found from any source: %s", d.String()))
+		return fmt.Errorf("Dependency not found from any source: %s", d.String())
 	}
 
 	if gm, ok := global_modules[d.Module.Name+"-"+d.Module.Version+"~"+d.Module.Source.URL]; ok {
@@ -274,7 +274,7 @@ func (d *Dependency) Resolve(p *Module) error {
 		if p != nil {
 			if p.IsCircular(d.Module) {
 				log.Error("Detected circular dependency %s from module %s", d.Module, p)
-				return errors.New(fmt.Sprintf("Detected circular dependency %s from module %s", d.Module, p))
+				return fmt.Errorf("Detected circular dependency %s from module %s", d.Module, p)
 			}
 		}
 
@@ -462,13 +462,11 @@ func (m *Module) Download() error {
 		c.Stdout = &stdout2
 
 		if err := c.Start(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s (%s): %s", m.Name, m.Version, err)
-			return errors.New(errstr)
+			return fmt.Errorf("Error extracting %s (%s): %s", m.Name, m.Version, err)
 		}
 
 		if err := c.Wait(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr2.String(), stdout2.String())
-			return errors.New(errstr)
+			return fmt.Errorf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr2.String(), stdout2.String())
 		}
 
 		out.Close()
