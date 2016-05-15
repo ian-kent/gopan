@@ -1,3 +1,5 @@
+VERSION = 0.9
+
 all: deps install fmt
 
 fmt:
@@ -14,7 +16,7 @@ install: pandex mirropan getpan smartpan
 
 dist: smartpan
 	rm -rf ./build
-	./gox_build.sh "0.8"
+	./gox_build.sh "$(VERSION)"
 
 pandex:
 	go install ./pandex
