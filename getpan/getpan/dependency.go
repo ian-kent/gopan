@@ -190,6 +190,8 @@ func (d *DependencyList) Install() (int, error) {
 	return n, nil
 }
 
+// Resolve dependencies in a dependency list
+// Resolves dependencies in order they occured originally
 func (d *DependencyList) Resolve() error {
 	if d == nil {
 		log.Debug("No dependencies to resolve")
@@ -220,6 +222,7 @@ func (d *DependencyList) Resolve() error {
 	return nil
 }
 
+// Resolve a dependency (i.e. one module), trying all sources
 func (d *Dependency) Resolve(p *Module) error {
 	if gm, ok := global_modules[d.Name+"-"+d.Version]; ok {
 		log.Trace("Dependency %s already resolved (S1): %s", d, gm)
