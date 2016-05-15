@@ -70,7 +70,7 @@ func main() {
 			return
 		}
 
-		_, err = deps.Install()
+		_, err := deps.Install()
 		if err != nil {
 			log.Error("Error installing dependencies: %s", err)
 			os.Exit(2)

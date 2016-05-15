@@ -201,8 +201,12 @@ func (d *DependencyList) Resolve() error {
 	errs := make([]string, 0)
 
 	for _, dep := range d.Dependencies {
-		log.Debug("Resolving dependency: %s", dep)
-		dep.Resolve(d.Parent)
+		log.Debug("Resolving module dependency: %s", dep)
+		if err := dep.Resolve(d.Parent); err != nil {
+			log.Error("Error resolving module dependencies [%s]: %s", dep.Module.String(), err)
+			errs = append(errs, dep.Module.String())
+			break
+		}
 	}
 
 	if len(errs) > 0 {
@@ -262,7 +266,7 @@ func (d *Dependency) Resolve(p *Module) error {
 		d.Module = gm
 	} else {
 		log.Debug("Downloading: %s", d.Module)
-		if d.Module.Download() != nil {
+		if err := d.Module.Download(); err != nil {
 			log.Error("Error downloading module %s: %s", d.Module, err)
 			return err
 		}
