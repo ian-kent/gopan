@@ -14,12 +14,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/getpan/getpan"
 	"github.com/companieshouse/gopan/gopan"
 	gotcha "github.com/companieshouse/gotcha/app"
 	"github.com/companieshouse/gotcha/events"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 )
 
 var CurrentRelease = "0.8"

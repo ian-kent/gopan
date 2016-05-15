@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/gopan"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 	"html/template"
 	"os"
 	"strings"
