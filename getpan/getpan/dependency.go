@@ -243,8 +243,8 @@ func (d *Dependency) Resolve(p *Module) error {
 		}
 	}
 	if d.Module == nil {
-		log.Error("Error resolving dependency: %s", d)
-		return fmt.Errorf("Dependency not found from any source: %s", d.String())
+		log.Error("Failed to resolve dependency: %s", d)
+		return fmt.Errorf("Dependency not found from any source: %s", d)
 	}
 
 	if gm, ok := global_modules[d.Module.Name+"-"+d.Module.Version+"~"+d.Module.Source.URL]; ok {
