@@ -181,8 +181,7 @@ func delete_file(session *http.Session) {
 
 	log.Debug("Removing file from gopancache: %s", fname)
 	// TODO move file deletion to shared gopan package
-	err := os.Remove(fname)
-	if err != nil {
+	if err := os.Remove(fname); err != nil {
 		log.Error("Error removing file: %s", err)
 	}
 

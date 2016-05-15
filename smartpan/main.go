@@ -48,8 +48,7 @@ func main() {
 		cfg.CacheDir = config.CacheDir
 
 		for _, source := range cfg.Sources {
-			err := source.Load()
-			if err != nil {
+			if err := source.Load(); err != nil {
 				log.Error("Error loading sources: %s", err)
 				os.Exit(1)
 				return
@@ -65,8 +64,7 @@ func main() {
 		deps.AddDependency(d1)
 		deps.AddDependency(d2)
 
-		err := deps.Resolve()
-		if err != nil {
+		if err := deps.Resolve(); err != nil {
 			log.Error("Error resolving dependencies: %s", err)
 			os.Exit(1)
 			return
@@ -349,8 +347,7 @@ func main() {
 		}
 
 		var r Releases
-		err = json.Unmarshal(b, &r)
-		if err != nil {
+		if err = json.Unmarshal(b, &r); err != nil {
 			log.Error("Error unmarshalling JSON: %s", err.Error())
 			return
 		}

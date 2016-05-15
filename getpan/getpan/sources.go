@@ -114,8 +114,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		}
 
 		var v *WhereOutput
-		err = json.Unmarshal(body, &v)
-		if err != nil {
+		if err = json.Unmarshal(body, &v); err != nil {
 			log.Error("Error parsing JSON: %s", err.Error())
 			return nil, err
 		}
@@ -180,8 +179,7 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 		cmd.Stdout = &sout
 		cmd.Stderr = &serr
 
-		err := cmd.Run()
-		if err != nil {
+		if err := cmd.Run(); err != nil {
 			log.Error("cpanm %s: %s,\n%s\n", cpanm_args, err, serr.String())
 			return nil, nil
 		}

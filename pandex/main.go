@@ -72,8 +72,7 @@ func main() {
 							log.Trace(" > dirpath: %s", dirpath)
 
 							// Only index packages if they don't already exist
-							err := pandex.Provides(pkg, tgzpath, extpath, dirpath)
-							if err != nil {
+							if err := pandex.Provides(pkg, tgzpath, extpath, dirpath); err != nil {
 								log.Error("Error retrieving package list: %s", err)
 								continue
 							}

@@ -262,8 +262,7 @@ func (d *Dependency) Resolve(p *Module) error {
 		d.Module = gm
 	} else {
 		log.Debug("Downloading: %s", d.Module)
-		err := d.Module.Download()
-		if err != nil {
+		if d.Module.Download() != nil {
 			log.Error("Error downloading module %s: %s", d.Module, err)
 			return err
 		}
@@ -294,8 +293,7 @@ func (d *Dependency) Resolve(p *Module) error {
 			}
 		}
 
-		err = d.Module.loadDependencies()
-		if err != nil {
+		if err := d.Module.loadDependencies(); err != nil {
 			return err
 		}
 	}
@@ -525,8 +523,8 @@ func (m *Module) loadDependencies() error {
 		}
 
 		log.Debug("Resolving module dependency list")
-		err := m.Deps.Resolve()
-		if err != nil {
+
+		if err := m.Deps.Resolve(); err != nil {
 			log.Error("Error resolving dependency list [%s]: %s", m.Name, err)
 			return err
 		}
@@ -594,8 +592,7 @@ func (m *Module) loadDependencies() error {
 		}
 
 		log.Debug("Resolving module dependency list")
-		err := m.Deps.Resolve()
-		if err != nil {
+		if err := m.Deps.Resolve(); err != nil {
 			log.Error("Error resolving dependency list: %s", err)
 			return err
 		}
