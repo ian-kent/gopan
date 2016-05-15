@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 
+	"github.com/companieshouse/gopan/gopan"
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
-	"github.com/companieshouse/gopan/gopan"
 )
 
 type Config struct {

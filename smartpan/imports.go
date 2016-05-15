@@ -4,12 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/getpan/getpan"
 	"github.com/companieshouse/gopan/gopan"
 	"github.com/companieshouse/gopan/pandex/pandex"
 	"github.com/companieshouse/gotcha/form"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -435,8 +435,7 @@ func do_import(session *http.Session, job *ImportJob) {
 			msg(" | Getting list of packages")
 			modnm := strings.TrimSuffix(fn, ".tar.gz")
 			pkg := indexes[config.Index][reponame].Authors[auth].Packages[fn]
-			err := pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir)
-			if err != nil {
+			if err := pandex.Provides(pkg, npath, ndir+"/"+modnm, ndir); err != nil {
 				msg(" ! Error retrieving package list for " + pkg.Name + ": " + err.Error())
 			}
 

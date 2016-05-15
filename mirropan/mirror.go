@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/gopan"
+	"github.com/ian-kent/go-log/log"
 	"io"
 	"net/http"
 	"os"

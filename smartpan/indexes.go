@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/gopan"
+	"github.com/ian-kent/go-log/log"
 )
 
 // GoPAN indexes - CPAN, BackPAN etc - map[config.name]map[source.name]*Source

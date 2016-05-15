@@ -14,15 +14,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/getpan/getpan"
 	"github.com/companieshouse/gopan/gopan"
 	gotcha "github.com/companieshouse/gotcha/app"
 	"github.com/companieshouse/gotcha/events"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 )
 
-var CurrentRelease = "0.8"
+var CurrentRelease = "0.9"
 
 type Releases []*Release
 type Release struct {
@@ -48,8 +48,7 @@ func main() {
 		cfg.CacheDir = config.CacheDir
 
 		for _, source := range cfg.Sources {
-			err := source.Load()
-			if err != nil {
+			if err := source.Load(); err != nil {
 				log.Error("Error loading sources: %s", err)
 				os.Exit(1)
 				return
@@ -65,14 +64,13 @@ func main() {
 		deps.AddDependency(d1)
 		deps.AddDependency(d2)
 
-		err := deps.Resolve()
-		if err != nil {
+		if err := deps.Resolve(); err != nil {
 			log.Error("Error resolving dependencies: %s", err)
 			os.Exit(1)
 			return
 		}
 
-		_, err = deps.Install()
+		_, err := deps.Install()
 		if err != nil {
 			log.Error("Error installing dependencies: %s", err)
 			os.Exit(2)
@@ -349,8 +347,7 @@ func main() {
 		}
 
 		var r Releases
-		err = json.Unmarshal(b, &r)
-		if err != nil {
+		if err = json.Unmarshal(b, &r); err != nil {
 			log.Error("Error unmarshalling JSON: %s", err.Error())
 			return
 		}

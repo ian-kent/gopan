@@ -14,14 +14,12 @@ func newFormPostRequest(uri string, params map[string]string) (*http.Request, er
 	writer := multipart.NewWriter(body)
 
 	for key, val := range params {
-		err := writer.WriteField(key, val)
-		if err != nil {
+		if err := writer.WriteField(key, val); err != nil {
 			return nil, err
 		}
 	}
 
-	err := writer.Close()
-	if err != nil {
+	if err := writer.Close(); err != nil {
 		return nil, err
 	}
 
@@ -55,8 +53,7 @@ func newfileUploadRequest(uri string, params map[string]string, paramName, path 
 			return nil, err
 		}
 	}
-	err = writer.Close()
-	if err != nil {
+	if err = writer.Close(); err != nil {
 		return nil, err
 	}
 

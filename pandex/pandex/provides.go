@@ -3,8 +3,8 @@ package pandex
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gopan/gopan"
+	"github.com/ian-kent/go-log/log"
 	"os"
 	"os/exec"
 )

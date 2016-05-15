@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 	"io/ioutil"
 	nethttp "net/http"
 	"os"

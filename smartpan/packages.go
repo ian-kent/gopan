@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/ian-kent/go-log/log"
 	"github.com/companieshouse/gotcha/http"
+	"github.com/ian-kent/go-log/log"
 	"strconv"
 )
 
