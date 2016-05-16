@@ -205,8 +205,8 @@ func (d *DependencyList) Resolve() error {
 	for _, dep := range d.Dependencies {
 		log.Debug("Resolving module dependency: %s", dep)
 		if err := dep.Resolve(d.Parent); err != nil {
-			log.Error("Error resolving module dependencies [%s]: %s", dep.Module.String(), err)
-			errs = append(errs, dep.Module.String())
+			log.Error("Error resolving module dependencies [%s]: %s", dep, err)
+			errs = append(errs, dep.String())
 			break
 		}
 	}
