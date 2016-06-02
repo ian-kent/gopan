@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"path/filepath"
 
 	"github.com/ian-kent/go-log/log"
 )
@@ -173,8 +174,16 @@ func (s *Source) Find(d *Dependency) (*Module, error) {
 
 		var sout, serr bytes.Buffer
 		var cpanm_args string = fmt.Sprintf("-L %s --info %s~\"%s%s\"", config.InstallDir, d.Name, d.Modifier, d.Version)
+
+		cpanm_cache_dir, err := filepath.Abs(config.CacheDir)
+		if err != nil {
+			log.Error("Failed to get absolute path of gopan cache directory: %s", err)
+			return nil, err
+		}
+
 		log.Trace("About to exec: cpanm %s", cpanm_args)
 		os.Setenv("CPANM_INFO_ARGS", cpanm_args)
+		os.Setenv("PERL_CPANM_HOME", cpanm_cache_dir)
 		cmd := exec.Command("bash", "-c", `eval cpanm $CPANM_INFO_ARGS`)
 		cmd.Stdout = &sout
 		cmd.Stderr = &serr

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"path/filepath"
 )
 
 type DependencyList struct {
@@ -643,6 +644,14 @@ func (m *Module) Install() (int, error) {
 	var c *exec.Cmd
 	var stdout *bytes.Buffer
 	var stderr *bytes.Buffer
+
+	cpanm_cache_dir, err := filepath.Abs(config.CacheDir)
+	if err != nil {
+		log.Error("Failed to get absolute path of gopan cache directory: %s", err)
+		return n, err
+	}
+
+	os.Setenv("PERL_CPANM_HOME", cpanm_cache_dir)
 
 	done := false
 	attempts := 0
