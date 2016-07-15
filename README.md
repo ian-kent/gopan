@@ -31,6 +31,12 @@ You need Perl (preferably >=5.18.2) and the following modules for indexing
 - Parse::LocalDistribution
 - JSON::XS
 
+### Setting up 
+ - `cd $GOPATH/src/github.com/companieshouse/`
+ - `git clone git@github.com:companieshouse/gopan.git`
+ - `cd gopan`
+ - `make`
+
 Use getpan to simplify installation:
 
     getpan Parse::LocalDistribution JSON::XS
