@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/companieshouse/gopan/gopan"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
 	"gopkg.in/yaml.v1"
 	"io"
 	"io/ioutil"
@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"path/filepath"
 )
 
 type DependencyList struct {
@@ -169,7 +170,9 @@ func (d *DependencyList) Install() (int, error) {
 				errorLock.Unlock()
 			}
 
+			install_lock.Lock()
 			install_mutex[dep.Module.Cached].Unlock()
+			install_lock.Unlock()
 
 			n++
 		}(dep)
@@ -188,6 +191,8 @@ func (d *DependencyList) Install() (int, error) {
 	return n, nil
 }
 
+// Resolve dependencies in a dependency list
+// Resolves dependencies in order they occured originally
 func (d *DependencyList) Resolve() error {
 	if d == nil {
 		log.Debug("No dependencies to resolve")
@@ -196,121 +201,16 @@ func (d *DependencyList) Resolve() error {
 
 	log.Debug("Resolving dependencies")
 
-	var wg sync.WaitGroup
-	semaphore := make(chan int, config.CPUs)
-	var errorLock sync.Mutex
-
 	errs := make([]string, 0)
 
 	for _, dep := range d.Dependencies {
-		log.Debug("Resolving dependency: %s", dep)
-		wg.Add(1)
-		go func(dep *Dependency) {
-			defer wg.Done()
-
-			semaphore <- 1
-
-			global_lock.Lock()
-			if gm, ok := global_modules[dep.Name+"-"+dep.Version]; ok {
-				log.Trace("Dependency %s already resolved (S1): %s", dep, gm)
-				global_lock.Unlock()
-				dep.Module = gm
-				<-semaphore
-				return
-			}
-			global_lock.Unlock()
-
-			log.Debug("Resolving: %s", dep)
-			err := dep.Resolve()
-			if err != nil {
-				log.Error("Error resolving dependency: %s", dep)
-				errorLock.Lock()
-				errs = append(errs, dep.String())
-				errorLock.Unlock()
-				<-semaphore
-				return
-			}
-
-			global_lock.Lock()
-			if gm, ok := global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL]; ok {
-				global_lock.Unlock()
-				log.Trace("Dependency %s already resolved (S2): %s", dep, dep.Module)
-				dep.Module = gm
-			} else if gm, ok := global_modules[dep.Module.Name]; ok {
-				global_lock.Unlock()
-				log.Trace("Dependency %s already resolved (S3): %s", dep.Module.Name, dep.Module)
-
-				// See if the already resolved version is acceptable
-				if !dep.MatchesVersion(gm.Version) {
-					log.Error("Version conflict in dependency tree: %s => %s", dep, gm)
-					errorLock.Lock()
-					errs = append(errs, dep.Module.String())
-					errorLock.Unlock()
-					<-semaphore
-					return
-				}
-
-				log.Trace("Version %s matches %s", dep.Module, gm.Version)
-
-				// TODO See if downloading a new version would be better
-				dep.Module = gm
-			} else {
-				log.Debug("Downloading: %s", dep.Module)
-				err = dep.Module.Download()
-				if err != nil {
-					log.Error("Error downloading module %s: %s", dep.Module, err)
-					errorLock.Lock()
-					errs = append(errs, dep.Module.String())
-					errorLock.Unlock()
-					<-semaphore
-					return
-				}
-
-				if d.Parent != nil {
-					if d.Parent.IsCircular(dep.Module) {
-						log.Error("Detected circular dependency %s from module %s", dep.Module, d.Parent)
-						<-semaphore
-						return
-					}
-				}
-
-				// module can't exist because of global_lock
-				global_modules[dep.Module.Name] = dep.Module
-				global_modules[dep.Module.Name+"-"+dep.Module.Version] = dep.Module
-				global_modules[dep.Module.Name+"-"+dep.Module.Version+"~"+dep.Module.Source.URL] = dep.Module
-				global_lock.Unlock()
-
-				log.Debug("Resolving module dependencies: %s", dep.Module)
-				dep.Module.Deps = &DependencyList{
-					Parent:       dep.Module,
-					Dependencies: make([]*Dependency, 0),
-				}
-
-				if dep.Additional != nil && len(dep.Additional) > 0 {
-					log.Trace("Adding cpanfile additional REQS")
-					for _, additional := range dep.Additional {
-						log.Trace("Adding additional dependency from cpanfile: %s", additional)
-						dep.Module.Deps.AddDependency(additional)
-					}
-				}
-
-				err = dep.Module.loadDependencies()
-			}
-
-			if err != nil {
-				log.Error("Error resolving module dependencies [%s]: %s", dep.Module.String(), err)
-				errorLock.Lock()
-				errs = append(errs, dep.Module.String())
-				errorLock.Unlock()
-				<-semaphore
-				return
-			}
-
-			<-semaphore
-		}(dep)
+		log.Debug("Resolving module dependency: %s", dep)
+		if err := dep.Resolve(d.Parent); err != nil {
+			log.Error("Error resolving module dependencies [%s]: %s", dep, err)
+			errs = append(errs, dep.String())
+			break
+		}
 	}
-
-	wg.Wait()
 
 	if len(errs) > 0 {
 		log.Error("Failed to find dependencies:")
@@ -323,24 +223,90 @@ func (d *DependencyList) Resolve() error {
 	return nil
 }
 
-func (v *Dependency) Resolve() error {
-	log.Trace("Resolving dependency: %s", v)
+// Resolve a dependency (i.e. one module), trying all sources
+func (d *Dependency) Resolve(p *Module) error {
+	if gm, ok := global_modules[d.Name+"-"+d.Version]; ok {
+		log.Trace("Dependency %s already resolved (S1): %s", d, gm)
+		d.Module = gm
+		return nil
+	}
+
+	log.Trace("Resolving dependency: %s", d)
 
 	for _, s := range config.Sources {
 		log.Trace("=> Trying source: %s", s)
-		m, err := s.Find(v)
+		m, err := s.Find(d)
 		if err != nil {
 			log.Trace("=> Error from source: %s", err)
 			continue
 		}
 		if m != nil {
 			log.Trace("=> Resolved dependency: %s", m)
-			v.Module = m
-			return nil
+			d.Module = m
+			break
+		}
+	}
+	if d.Module == nil {
+		log.Error("Failed to resolve dependency: %s", d)
+		return fmt.Errorf("Dependency not found from any source: %s", d)
+	}
+
+	if gm, ok := global_modules[d.Module.Name+"-"+d.Module.Version+"~"+d.Module.Source.URL]; ok {
+		log.Trace("Dependency %s already resolved (S2): %s", d, gm)
+		d.Module = gm
+	} else if gm, ok := global_modules[d.Module.Name]; ok {
+		log.Trace("Dependency %s already resolved (S3): %s", d, gm)
+
+		// See if the already resolved version is acceptable
+		if !d.MatchesVersion(gm.Version) {
+			errstr := fmt.Sprintf("Version conflict in dependency tree: %s => %s", d, gm)
+			log.Error(errstr)
+			return errors.New(errstr)
+		}
+
+		log.Trace("Version %s matches %s", d.Module, gm.Version)
+
+		// TODO See if downloading a new version would be better
+		d.Module = gm
+	} else {
+		log.Debug("Downloading: %s", d.Module)
+		if err := d.Module.Download(); err != nil {
+			log.Error("Error downloading module %s: %s", d.Module, err)
+			return err
+		}
+
+		if p != nil {
+			if p.IsCircular(d.Module) {
+				log.Error("Detected circular dependency %s from module %s", d.Module, p)
+				return fmt.Errorf("Detected circular dependency %s from module %s", d.Module, p)
+			}
+		}
+
+		// module can't exist because of global_lock
+		global_modules[d.Module.Name] = d.Module
+		global_modules[d.Module.Name+"-"+d.Module.Version] = d.Module
+		global_modules[d.Module.Name+"-"+d.Module.Version+"~"+d.Module.Source.URL] = d.Module
+
+		log.Debug("Resolving module dependencies: %s", d.Module)
+		d.Module.Deps = &DependencyList{
+			Parent:       d.Module,
+			Dependencies: make([]*Dependency, 0),
+		}
+
+		if d.Additional != nil && len(d.Additional) > 0 {
+			log.Trace("Adding cpanfile additional REQS")
+			for _, additional := range d.Additional {
+				log.Trace("Adding additional dependency from cpanfile: %s", additional)
+				d.Module.Deps.AddDependency(additional)
+			}
+		}
+
+		if err := d.Module.loadDependencies(); err != nil {
+			return err
 		}
 	}
 
-	return errors.New(fmt.Sprintf("Dependency not found from any source: %s", v))
+	return nil
 }
 
 func (v *Dependency) MatchesVersion(version string) bool {
@@ -500,13 +466,11 @@ func (m *Module) Download() error {
 		c.Stdout = &stdout2
 
 		if err := c.Start(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s (%s): %s", m.Name, m.Version, err)
-			return errors.New(errstr)
+			return fmt.Errorf("Error extracting %s (%s): %s", m.Name, m.Version, err)
 		}
 
 		if err := c.Wait(); err != nil {
-			errstr := fmt.Sprintf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr2.String(), stdout2.String())
-			return errors.New(errstr)
+			return fmt.Errorf("Error extracting %s %s: %s\nSTDERR:\n%sSTDOUT:\n%s", m.Name, m.Version, err, stderr2.String(), stdout2.String())
 		}
 
 		out.Close()
@@ -565,8 +529,8 @@ func (m *Module) loadDependencies() error {
 		}
 
 		log.Debug("Resolving module dependency list")
-		err := m.Deps.Resolve()
-		if err != nil {
+
+		if err := m.Deps.Resolve(); err != nil {
 			log.Error("Error resolving dependency list [%s]: %s", m.Name, err)
 			return err
 		}
@@ -634,8 +598,7 @@ func (m *Module) loadDependencies() error {
 		}
 
 		log.Debug("Resolving module dependency list")
-		err := m.Deps.Resolve()
-		if err != nil {
+		if err := m.Deps.Resolve(); err != nil {
 			log.Error("Error resolving dependency list: %s", err)
 			return err
 		}
@@ -681,6 +644,14 @@ func (m *Module) Install() (int, error) {
 	var c *exec.Cmd
 	var stdout *bytes.Buffer
 	var stderr *bytes.Buffer
+
+	cpanm_cache_dir, err := filepath.Abs(config.CacheDir)
+	if err != nil {
+		log.Error("Failed to get absolute path of gopan cache directory: %s", err)
+		return n, err
+	}
+
+	os.Setenv("PERL_CPANM_HOME", cpanm_cache_dir)
 
 	done := false
 	attempts := 0

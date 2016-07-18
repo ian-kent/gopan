@@ -1,4 +1,4 @@
-GoPAN  [ ![Download](https://api.bintray.com/packages/ian-kent/generic/gopan/images/download.svg) ](https://bintray.com/ian-kent/generic/gopan/_latestVersion)
+GoPAN
 =====
 
 GoPAN provides a full end-to-end toolchain to mirror, index, host and install from
@@ -8,10 +8,10 @@ Mirrors hosted by [SmartPAN](smartpan/README.md) are fully Carton/cpanm compatib
 but also support the `SmartPAN` interface used by [GetPAN](getpan/README.md).
 
 [GetPAN](getpan/README.md) is also Carton/cpanm compatible and works with CPAN, BackPAN,
-and DarkPAN mirrors using Pinto and Orepan. 
+and DarkPAN mirrors using Pinto and Orepan.
 
 When used with [SmartPAN](smartpan/README.md),
-the `SmartPAN` interface fixes dependency resolution issues which exist with typical CPAN 
+the `SmartPAN` interface fixes dependency resolution issues which exist with typical CPAN
 indexes.
 
 | Application                    | Description
@@ -30,6 +30,14 @@ You need Perl (preferably >=5.18.2) and the following modules for indexing
 
 - Parse::LocalDistribution
 - JSON::XS
+
+### Setting up
+
+```bash
+$ go get github.com/companieshouse/gopan
+$ cd $GOPATH/src/github.com/companieshouse/gopan
+$ make
+```
 
 Use getpan to simplify installation:
 

@@ -2,7 +2,7 @@
 
 VERSION=$1
 
-mkdir build -p
+mkdir -p build
 pushd build
 
 gox ../...

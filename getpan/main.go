@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/companieshouse/gopan/getpan/getpan"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/getpan/getpan"
 )
 
 var config *getpan.Config

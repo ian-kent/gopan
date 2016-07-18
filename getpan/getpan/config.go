@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/companieshouse/gopan/gopan"
 	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
 )
 
 var config *Config

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/companieshouse/gopan/gopan"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
 	"os"
 	"strings"
 	"sync"

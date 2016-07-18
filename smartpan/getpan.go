@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ian-kent/gopan/getpan/getpan"
+	"github.com/companieshouse/gopan/getpan/getpan"
 	"strings"
 )
 
@@ -21,8 +21,7 @@ func getpan_import(job *ImportJob, msg func(string)) (*getpan.CPANFile, []*getpa
 	}(job)
 
 	for _, source := range cfg.Sources {
-		err := source.Load()
-		if err != nil {
+		if err := source.Load(); err != nil {
 			m := fmt.Sprintf("Error loading sources: %s", err)
 			msg(m)
 			return nil, nil
@@ -42,8 +41,7 @@ func getpan_import(job *ImportJob, msg func(string)) (*getpan.CPANFile, []*getpa
 	m = "Parsed cpanfile"
 	msg(m)
 
-	err = deps.Resolve()
-	if err != nil {
+	if err = deps.Resolve(); err != nil {
 		m := fmt.Sprintf("Error resolving dependencies: %s", err)
 		msg(m)
 		return deps, nil

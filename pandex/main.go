@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/companieshouse/gopan/gopan"
+	"github.com/companieshouse/gopan/pandex/pandex"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
-	"github.com/ian-kent/gopan/pandex/pandex"
 	"os"
 	"strings"
 	"sync"
@@ -72,8 +72,7 @@ func main() {
 							log.Trace(" > dirpath: %s", dirpath)
 
 							// Only index packages if they don't already exist
-							err := pandex.Provides(pkg, tgzpath, extpath, dirpath)
-							if err != nil {
+							if err := pandex.Provides(pkg, tgzpath, extpath, dirpath); err != nil {
 								log.Error("Error retrieving package list: %s", err)
 								continue
 							}

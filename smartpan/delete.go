@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/companieshouse/gopan/gopan"
+	"github.com/companieshouse/gotcha/http"
 	"github.com/ian-kent/go-log/log"
-	"github.com/ian-kent/gopan/gopan"
-	"github.com/ian-kent/gotcha/http"
 	"html/template"
 	"os"
 	"strings"
@@ -181,8 +181,7 @@ func delete_file(session *http.Session) {
 
 	log.Debug("Removing file from gopancache: %s", fname)
 	// TODO move file deletion to shared gopan package
-	err := os.Remove(fname)
-	if err != nil {
+	if err := os.Remove(fname); err != nil {
 		log.Error("Error removing file: %s", err)
 	}
 
